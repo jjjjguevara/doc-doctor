@@ -8,6 +8,7 @@ import {
     NotesNamingMode,
     Opacity,
     Settings,
+    SidebarViewMode,
     StyleScope,
 } from './settings-type';
 import { getDefaultColor } from './helpers/get-default-color';
@@ -15,6 +16,7 @@ import { isValidLabel } from '../editor-suggest/helpers/is-valid-label';
 import { formattedDate } from '../helpers/date-utils';
 import { DAYS_UNUSED } from './settings-selectors';
 import { ClipboardTemplateSection } from '../clipboard/helpers/annotations-to-text';
+import { StubsSettingsActions, stubsSettingsReducer } from '../stubs/stubs-settings-reducer';
 
 export type SettingsActions =
     | {
@@ -135,7 +137,9 @@ export type SettingsActions =
     | {
           type: 'TOGGLE_TRUNCATE_FILE_NAME';
       }
-    | { type: 'SET_DEFAULT_PALETTE'; payload: { palette: DefaultPalette } };
+    | { type: 'SET_DEFAULT_PALETTE'; payload: { palette: DefaultPalette } }
+    | { type: 'SET_SIDEBAR_VIEW_MODE'; payload: { mode: SidebarViewMode } }
+    | StubsSettingsActions;
 
 const updateState = (store: Settings, action: SettingsActions) => {
     const labels = store.decoration.styles.labels;
@@ -239,6 +243,11 @@ const updateState = (store: Settings, action: SettingsActions) => {
         store.notes.truncateFileName = !store.notes.truncateFileName;
     } else if (action.type === 'SET_DEFAULT_PALETTE') {
         store.decoration.defaultPalette = action.payload.palette;
+    } else if (action.type === 'SET_SIDEBAR_VIEW_MODE') {
+        store.outline.sidebarViewMode = action.payload.mode;
+    } else if (action.type.startsWith('STUBS_')) {
+        // Delegate stubs actions to stubs reducer
+        stubsSettingsReducer(store.stubs, action as StubsSettingsActions);
     }
 };
 export const settingsReducer = (

@@ -1,6 +1,7 @@
 import { Settings } from './settings-type';
 import { copiedAnnotationsTemplates } from '../clipboard/helpers/annotations-to-text';
 import { noteTemplate } from '../note-creation/create-note-file';
+import { DEFAULT_STUBS_CONFIGURATION } from '../stubs/stubs-defaults';
 
 export const DEFAULT_SETTINGS = (): Settings => ({
     editorSuggest: {
@@ -25,12 +26,15 @@ export const DEFAULT_SETTINGS = (): Settings => ({
         showSearchInput: false,
         hiddenLabels: [],
         hiddenTypes: [],
+        sidebarViewMode: 'annotations',
     },
     tts: {
         rate: 1.1,
         pitch: 1.0,
         volume: 1,
-        voice: window.speechSynthesis.getVoices().find((v) => v.default)?.name,
+        voice: typeof window !== 'undefined' && window.speechSynthesis
+            ? window.speechSynthesis.getVoices().find((v) => v.default)?.name
+            : undefined,
         focusAnnotationInEditor: true,
     },
     notes: {
@@ -48,4 +52,5 @@ export const DEFAULT_SETTINGS = (): Settings => ({
     clipboard: {
         templates: copiedAnnotationsTemplates,
     },
+    stubs: DEFAULT_STUBS_CONFIGURATION(),
 });

@@ -1,4 +1,4 @@
-import { Menu, Plugin, TAbstractFile, TFile, TFolder } from 'obsidian';
+import { Menu, Plugin, TAbstractFile, TFile, TFolder, MarkdownView } from 'obsidian';
 import { addInsertCommentCommands } from './commands/commands';
 import { Settings } from './settings/settings-type';
 import {
@@ -24,6 +24,19 @@ import { DecorationSettings } from './editor-plugin/helpers/decorate-annotations
 import { EditorPlugin, editorPlugin } from './editor-plugin/editor-plugin';
 import { Idling } from './idling/idling';
 
+// Stubs imports
+import {
+    registerStubsCommands,
+    stubsEditorPlugin,
+    StubsEditorPlugin,
+    updateStubsConfig,
+    updateSyncState,
+    performSync,
+    stubAnchorStyles,
+    StubSuggest,
+    stubSuggestStyles,
+} from './stubs';
+
 export default class LabeledAnnotations extends Plugin {
     outline: OutlineUpdater;
     settings: Store<Settings, SettingsActions>;
@@ -31,6 +44,7 @@ export default class LabeledAnnotations extends Plugin {
     idling: Idling;
     decorationSettings: DecorationSettings;
     editorSuggest: AnnotationSuggest;
+    stubSuggest: StubSuggest;
     private unsubscribeCallbacks: Set<() => void> = new Set();
 
     async onload() {
@@ -56,6 +70,13 @@ export default class LabeledAnnotations extends Plugin {
         );
 
         addInsertCommentCommands(this);
+
+        // Register stubs commands
+        try {
+            registerStubsCommands(this);
+        } catch (error) {
+            console.error('Failed to register stubs commands:', error);
+        }
 
         this.registerView(
             SIDEBAR_OUTLINE_VIEW_TYPE,
@@ -87,6 +108,98 @@ export default class LabeledAnnotations extends Plugin {
         EditorPlugin.plugin = this;
         this.unsubscribeCallbacks.add(subscribeDecorationStateToSettings(this));
         this.registerEditorExtension([editorPlugin]);
+
+        // Initialize stubs
+        this.initializeStubs();
+    }
+
+    /**
+     * Initialize stubs module
+     */
+    initializeStubs() {
+        try {
+            // Set stubs editor plugin reference
+            StubsEditorPlugin.plugin = this;
+
+            // Register stubs editor extension
+            this.registerEditorExtension([stubsEditorPlugin]);
+
+            // Register stub suggest (^^ trigger)
+            this.stubSuggest = new StubSuggest(this.app, this);
+            this.registerEditorSuggest(this.stubSuggest);
+
+            // Initialize stubs config from settings
+            updateStubsConfig(this.settings.getValue().stubs);
+
+            // Subscribe to settings changes to update stubs config
+            this.unsubscribeCallbacks.add(
+                this.settings.subscribe(() => {
+                    updateStubsConfig(this.settings.getValue().stubs);
+                })
+            );
+
+            // Register event to sync stubs when file changes
+            this.registerEvent(
+                this.app.workspace.on('active-leaf-change', () => {
+                    this.syncStubsForActiveFile();
+                })
+            );
+
+            this.registerEvent(
+                this.app.metadataCache.on('changed', (file) => {
+                    const activeFile = this.app.workspace.getActiveFile();
+                    if (activeFile && file.path === activeFile.path) {
+                        this.syncStubsForActiveFile();
+                    }
+                })
+            );
+
+            // Add CSS for stub decorations and suggest styles
+            this.addStubStyles();
+        } catch (error) {
+            console.error('Failed to initialize stubs module:', error);
+        }
+    }
+
+    /**
+     * Sync stubs for the active file
+     */
+    async syncStubsForActiveFile() {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!view || !view.file) {
+            return;
+        }
+
+        const config = this.settings.getValue().stubs;
+        if (!config.enabled) {
+            return;
+        }
+
+        try {
+            const content = await this.app.vault.read(view.file);
+            const result = await performSync(this.app, view.file, content, config);
+            updateSyncState(result);
+        } catch (error) {
+            console.error('Failed to sync stubs:', error);
+        }
+    }
+
+    /**
+     * Add CSS styles for stub anchor decorations and suggest dropdown
+     */
+    addStubStyles() {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'm-stubs-styles';
+        styleEl.textContent = stubAnchorStyles + '\n' + stubSuggestStyles;
+        document.head.appendChild(styleEl);
+
+        // Clean up on unload
+        this.register(() => {
+            const el = document.getElementById('m-stubs-styles');
+            if (el) {
+                el.remove();
+            }
+        });
     }
 
     async loadSettings() {

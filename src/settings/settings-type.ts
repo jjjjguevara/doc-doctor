@@ -1,5 +1,6 @@
 import { AnnotationType } from '../sidebar-outline/components/components/annotations-list/annotations-list.store';
 import { ClipboardTemplates } from '../clipboard/helpers/annotations-to-text';
+import { StubsConfiguration } from '../stubs/stubs-types';
 
 export type Case = 'upper' | 'lower' | 'title';
 export type Opacity = 80 | 60 | 40 | 20;
@@ -53,6 +54,8 @@ export type DateString = string;
 
 export type DefaultPalette = 'bright' | 'dull';
 
+export type SidebarViewMode = 'annotations' | 'stubs';
+
 export type Settings = {
     editorSuggest: {
         enableAutoSuggest: boolean;
@@ -73,6 +76,7 @@ export type Settings = {
         showLabelsFilter: boolean;
         hiddenLabels: string[];
         hiddenTypes: AnnotationType[];
+        sidebarViewMode: SidebarViewMode;
     };
     tts: {
         volume: number;
@@ -94,4 +98,5 @@ export type Settings = {
     idling: {
         daysUnused: [DateString?, DateString?, DateString?];
     };
+    stubs: StubsConfiguration;
 };

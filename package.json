@@ -1,7 +1,7 @@
 {
-	"name": "enhanced-annotations",
-	"version": "0.1.9",
-	"description": "",
+	"name": "m-stubs",
+	"version": "0.2.0",
+	"description": "Vector-based stubs system for Obsidian - track document gaps with J-Editorial Framework integration",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",

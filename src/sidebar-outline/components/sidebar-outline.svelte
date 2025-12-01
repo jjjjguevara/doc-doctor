@@ -12,6 +12,10 @@
 	import { controls, pluginIdle } from './components/controls-bar/controls-bar.store';
 	import PluginIdle from './components/plugin-idle.svelte';
 	import StylesList from './components/controls-bar/components/styles/styles-list.svelte';
+	import ViewModeSwitcher from './components/controls-bar/components/view-mode-switcher.svelte';
+	import StubsList from './components/stubs-list/stubs-list.svelte';
+	import StubsSidebarSettings from './components/stubs-list/stubs-sidebar-settings.svelte';
+	import StubsControlsBar from './components/stubs-list/stubs-controls-bar.svelte';
 
 	export let plugin: LabeledAnnotations;
 </script>
@@ -20,13 +24,30 @@
     {#if $pluginIdle}
         <PluginIdle {plugin} />
     {:else}
-        <ControlsBar {plugin} />
-        {#if $controls.showStylesSettings}
-            <StylesList {plugin} />
-        {:else if Object.values($filteredBySearch.labels).flat().length || $searchTerm.length || $filteredHiddenLabels.size || $filteredHiddenCategories.size}
-            <FlatOutline {plugin} />
-        {:else}
-            <NoAnnotations />
+        <!-- Combined header with toggle and view-specific controls -->
+        <div class="outline-header">
+            <ViewModeSwitcher {plugin} />
+            {#if $controls.viewMode === 'annotations'}
+                <ControlsBar {plugin} />
+            {:else if $controls.viewMode === 'stubs'}
+                <StubsControlsBar {plugin} />
+            {/if}
+        </div>
+
+        <!-- Content area -->
+        {#if $controls.viewMode === 'annotations'}
+            {#if $controls.showStylesSettings}
+                <StylesList {plugin} />
+            {:else if Object.values($filteredBySearch.labels).flat().length || $searchTerm.length || $filteredHiddenLabels.size || $filteredHiddenCategories.size}
+                <FlatOutline {plugin} />
+            {:else}
+                <NoAnnotations />
+            {/if}
+        {:else if $controls.viewMode === 'stubs'}
+            {#if $controls.showStubsSettings}
+                <StubsSidebarSettings {plugin} />
+            {/if}
+            <StubsList {plugin} />
         {/if}
     {/if}
 </div>
@@ -41,5 +62,15 @@
         flex-direction: column;
         align-items: start;
         justify-content: start;
+    }
+
+    .outline-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0 8px;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 </style>
