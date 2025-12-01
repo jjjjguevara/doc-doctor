@@ -1,6 +1,6 @@
 # M-Stubs
 
-A vector-based stubs system for [Obsidian](https://obsidian.md) that enables tracking document gaps, quality control, and editorial workflows. Built on the [J-Editorial Framework](https://github.com/jjjjguevara/j-editorial) principles.
+A vector-based stubs system for [Obsidian](https://obsidian.md) that enables tracking document gaps, quality control, and editorial workflows. Built on the [J-Editorial Framework](https://jjjjguevara.vercel.app/j-editorial) principles.
 
 > **Fork Notice**: M-Stubs is a fork of [Enhanced Annotations](https://github.com/ycnmhd/obsidian-enhanced-annotations) by [ycnmhd](https://github.com/ycnmhd). The original plugin provides excellent comment/highlight management features which remain fully functional in this fork. M-Stubs extends these capabilities with a comprehensive stubs system for document quality tracking.
 
@@ -74,14 +74,14 @@ All features from the original Enhanced Annotations plugin remain:
 3. Install and enable
 
 ### Manual Installation
-1. Download the latest release from [GitHub Releases](https://github.com/jjjjguevara/obsidian-enhanced-annotations/releases)
+1. Download the latest release from [GitHub Releases](https://github.com/jjjjguevara/m-stubs/releases)
 2. Extract to your vault's `.obsidian/plugins/m-stubs/` folder
 3. Enable the plugin in Settings → Community Plugins
 
 ### Building from Source
 ```bash
-git clone https://github.com/jjjjguevara/obsidian-enhanced-annotations.git
-cd obsidian-enhanced-annotations
+git clone https://github.com/jjjjguevara/m-stubs.git
+cd m-stubs
 npm install
 npm run build
 ```
@@ -146,7 +146,7 @@ Access settings via **Settings → M-Stubs** or the gear icon in the stubs sideb
 
 ## J-Editorial Framework Integration
 
-M-Stubs implements the [J-Editorial Stubs Standard](https://github.com/jjjjguevara/j-editorial/blob/main/framework/02-practice/stubs/spec-stubs-standard.md), a comprehensive quality control framework for knowledge management.
+M-Stubs implements the [J-Editorial Stubs Standard](https://jjjjguevara.vercel.app/j-editorial/framework/02-practice/stubs/spec-stubs-standard), a comprehensive quality control framework for knowledge management.
 
 ### Three-Layer Architecture
 
@@ -218,7 +218,7 @@ For major changes, please open an issue first to discuss the proposed changes.
 
 ## Related Projects
 
-- [J-Editorial Framework](https://github.com/jjjjguevara/j-editorial) - The parent framework for knowledge management
+- [J-Editorial Framework](https://jjjjguevara.vercel.app/j-editorial) - The parent framework for knowledge management
 - [Enhanced Annotations](https://github.com/ycnmhd/obsidian-enhanced-annotations) - The original plugin this fork is based on
 
 ---
