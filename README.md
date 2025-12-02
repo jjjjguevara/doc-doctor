@@ -42,12 +42,15 @@ Doc Doctor supports configurable stub types out of the box:
 #### Frontmatter Integration
 ```yaml
 stubs:
-  - link: "Citation needed" ^stub-abc123
-  - expand:
+  - expand: #structured stub
       description: "Add deployment examples"
       stub_form: persistent
       priority: high
-    ^stub-def456
+      anchor: ^expand-def456
+  - verify: "This statement contradicts Section 1.2" # compact stub
+    anchor: ^question-ghi789
+  - question: "What's the performance impact of the new approach from section 2.3?" # corphaned/unlinked stub
+    
 ```
 
 #### Configurable Stub Types
