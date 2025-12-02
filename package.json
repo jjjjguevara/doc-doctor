@@ -1,6 +1,6 @@
 {
 	"name": "doc-doctor",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "AI-powered document analysis and stub tracking for Obsidian with J-Editorial Framework integration",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

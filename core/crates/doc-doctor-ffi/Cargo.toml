@@ -1,0 +1,15 @@
+[package]
+name = "doc-doctor-ffi"
+description = "FFI bindings for Doc Doctor (WASM and Node.js)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+doc-doctor-core = { path = "../doc-doctor-core" }
+serde.workspace = true
+serde_json.workspace = true
+wasm-bindgen.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]

@@ -17,7 +17,7 @@
     } from '../../../../stubs/stubs-store';
     import { getSortedStubTypes } from '../../../../stubs/stubs-defaults';
     import { navigateToStub, navigateToOrphanedStub, navigateToStubFrontmatter } from '../../../../stubs/helpers/stubs-navigation';
-    import { removeStubFromFrontmatter, performSync } from '../../../../stubs/helpers/stubs-sync';
+    import { removeStubFromFrontmatter, removeStubFromFrontmatterByContent, performSync } from '../../../../stubs/helpers/stubs-sync';
     import { removeAnchorFromContent } from '../../../../stubs/helpers/anchor-utils';
     import LabeledAnnotations from '../../../../main';
     import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-svelte';
@@ -122,17 +122,21 @@
         const file = view.file;
 
         try {
-            // Remove from frontmatter
             if (anchor) {
+                // Stub has anchor - remove by anchor ID
                 await removeStubFromFrontmatter(app, file, anchor, config);
-            }
 
-            // Remove inline anchor from content
-            if (anchor) {
+                // Remove inline anchor from content
                 const content = await app.vault.read(file);
                 const newContent = removeAnchorFromContent(content, anchor);
                 if (newContent !== content) {
                     await app.vault.modify(file, newContent);
+                }
+            } else {
+                // Stub has no anchor - find by ID and remove by type+description
+                const stub = $syncState.stubs.find(s => s.id === stubId);
+                if (stub) {
+                    await removeStubFromFrontmatterByContent(app, file, stub.type, stub.description, config);
                 }
             }
 

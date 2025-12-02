@@ -176,7 +176,75 @@ Stubs affect document refinement scores:
 - `blocking`: -0.10 per stub
 - `structural`: -0.15 per stub
 
+## Roadmap
+
+Doc Doctor is evolving toward a comprehensive document quality system with deterministic J-Editorial calculations.
+
+### Phase 1: Rust Core Library (In Progress)
+
+A high-performance Rust library (`doc-doctor-core`) providing:
+
+- **L1 Property Parsing**: YAML frontmatter extraction with position tracking
+- **L2 Dimension Calculations**: Health, usefulness, vector physics
+- **Stub System**: Type validation, form penalties, sync status
+
+```
+doc-doctor/core/
+├── crates/
+│   ├── doc-doctor-core/   # Core library (Rust)
+│   ├── doc-doctor-ffi/    # WASM bindings for Obsidian
+│   ├── doc-doctor-mcp/    # MCP server for Claude Code
+│   └── doc-doctor-cli/    # Command-line tool
+```
+
+### Phase 2: WASM Integration
+
+Compile `doc-doctor-core` to WebAssembly for native performance in Obsidian:
+- Real-time health score calculation
+- Instant usefulness margin feedback
+- Vector physics visualization
+
+### Phase 3: CLI Tool
+
+Batch processing and CI/CD integration:
+- `doc-doctor validate "**/*.md"` - Schema validation
+- `doc-doctor health --audience internal` - Quality gates
+- `doc-doctor sync --fix` - Automatic stub-anchor repair
+
+### Phase 4: MCP Server
+
+Claude Code integration with J-Editorial intelligence:
+- Document analysis tools
+- Stub resolution assistance
+- Quality improvement suggestions
+
+### Key Formulas (Implemented in Rust)
+
+**Health Score**:
+```
+health = 0.7 × refinement + 0.3 × (1 - stub_penalty)
+```
+
+**Usefulness Margin**:
+```
+margin = refinement - audience_gate
+```
+Where gates are: Personal (0.50), Internal (0.70), Trusted (0.80), Public (0.90)
+
+**Vector Physics**:
+```
+potential_energy = urgency × impact × complexity
+magnitude = √(PE² + friction²)
+```
+
 ## Changelog
+
+### v0.3.0 (2024-12-02)
+- **Fixed**: Stub deletion now works correctly (two-click confirmation)
+- **Fixed**: Frontmatter preservation during stub operations (no more reformatting)
+- **New**: Direct string manipulation for stub removal preserves YAML formatting
+- **New**: Rust workspace scaffolding in `core/` directory
+- **New**: `doc-doctor-core` crate with L1/L2 calculations (43 tests passing)
 
 ### v0.2.0 (2024-12-01)
 - **New**: Complete stubs system with sidebar panel
@@ -224,6 +292,6 @@ For major changes, please open an issue first to discuss the proposed changes.
 
 ---
 
-**Version**: 0.2.0
+**Version**: 0.3.0
 **Obsidian**: 0.15.0+
 **License**: MIT

@@ -1,0 +1,20 @@
+[package]
+name = "doc-doctor-cli"
+description = "CLI for Doc Doctor - J-Editorial document analysis"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "doc-doctor"
+path = "src/main.rs"
+
+[dependencies]
+doc-doctor-core = { path = "../doc-doctor-core" }
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+clap.workspace = true
+glob.workspace = true
+rayon.workspace = true
+anyhow.workspace = true

@@ -255,7 +255,8 @@ export async function addStubToFrontmatter(
 }
 
 /**
- * Remove a stub from frontmatter by anchor ID using Obsidian's processFrontMatter API
+ * Remove a stub from frontmatter by anchor ID using direct string manipulation.
+ * This preserves all other frontmatter formatting.
  */
 export async function removeStubFromFrontmatter(
     app: App,
@@ -263,41 +264,237 @@ export async function removeStubFromFrontmatter(
     anchorId: string,
     config: StubsConfiguration
 ): Promise<void> {
-    await app.fileManager.processFrontMatter(file, (frontmatter) => {
-        let stubs = (frontmatter[config.frontmatterKey] as unknown[]) || [];
-        if (!Array.isArray(stubs)) return;
+    const content = await app.vault.read(file);
+    const newContent = removeStubEntryByAnchor(content, anchorId, config.frontmatterKey);
 
-        // Filter out stub with matching anchor
-        const filteredStubs = stubs.filter((stub) => {
-            if (typeof stub !== 'object' || stub === null) return true;
+    if (newContent !== content) {
+        await app.vault.modify(file, newContent);
+    }
+}
 
-            const stubObj = stub as Record<string, unknown>;
+/**
+ * Remove a stub from frontmatter by type and description using direct string manipulation.
+ * This preserves all other frontmatter formatting.
+ */
+export async function removeStubFromFrontmatterByContent(
+    app: App,
+    file: TFile,
+    stubType: string,
+    description: string,
+    config: StubsConfiguration
+): Promise<void> {
+    const content = await app.vault.read(file);
+    const newContent = removeStubEntryByTypeAndDescription(content, stubType, description, config.frontmatterKey);
 
-            // Check top-level anchor
-            if (stubObj.anchor === anchorId) return false;
+    if (newContent !== content) {
+        await app.vault.modify(file, newContent);
+    }
+}
 
-            // Check structured anchor
-            for (const value of Object.values(stubObj)) {
-                if (typeof value === 'object' && value !== null) {
-                    const valueObj = value as Record<string, unknown>;
-                    if (valueObj.anchor === anchorId) return false;
+/**
+ * Find stub entries in frontmatter and return their line ranges.
+ * Handles both indented ("  - ") and non-indented ("- ") array styles.
+ */
+function findStubEntries(lines: string[], stubsKeyLine: number): Array<{
+    startLine: number;
+    endLine: number;
+    content: string;
+}> {
+    const entries: Array<{ startLine: number; endLine: number; content: string }> = [];
+    let i = stubsKeyLine + 1;
+
+    // Detect indentation style from first entry
+    let entryIndent = '';
+    for (let k = stubsKeyLine + 1; k < lines.length; k++) {
+        const line = lines[k];
+        if (line === '---') break;
+        const match = line.match(/^(\s*)- /);
+        if (match) {
+            entryIndent = match[1];
+            break;
+        }
+        // Skip empty lines
+        if (line.trim() === '') continue;
+        // Hit another key, no entries
+        if (line.match(/^[a-zA-Z_]/)) break;
+    }
+
+    const entryPattern = new RegExp(`^${entryIndent}- `);
+    const continuationIndent = entryIndent + '  '; // continuation lines have more indent
+
+    while (i < lines.length) {
+        const line = lines[i];
+
+        // Check if we've left the stubs section (new top-level key or end of frontmatter)
+        if (line.match(/^[a-zA-Z_]/) || line === '---') {
+            break;
+        }
+
+        // Check for array entry start
+        if (entryPattern.test(line)) {
+            const startLine = i;
+            let endLine = i;
+
+            // Find where this entry ends
+            let j = i + 1;
+            while (j < lines.length) {
+                const nextLine = lines[j];
+
+                // End of frontmatter
+                if (nextLine === '---') break;
+
+                // New top-level key (no leading whitespace, has colon)
+                if (nextLine.match(/^[a-zA-Z_][\w]*:/)) break;
+
+                // New array entry at same level
+                if (entryPattern.test(nextLine)) break;
+
+                // Continuation of this entry (more indented or empty)
+                if (nextLine.startsWith(continuationIndent) || nextLine.trim() === '') {
+                    endLine = j;
+                    j++;
+                } else {
+                    break;
                 }
             }
 
-            return true;
-        });
+            // Collect the entry content
+            const entryLines = lines.slice(startLine, endLine + 1);
+            entries.push({
+                startLine,
+                endLine,
+                content: entryLines.join('\n'),
+            });
 
-        if (filteredStubs.length === stubs.length) {
-            // Nothing removed
-            return;
-        }
-
-        if (filteredStubs.length === 0) {
-            delete frontmatter[config.frontmatterKey];
+            i = endLine + 1;
         } else {
-            frontmatter[config.frontmatterKey] = filteredStubs;
+            i++;
         }
+    }
+
+    return entries;
+}
+
+/**
+ * Remove a stub entry by anchor ID using direct string manipulation
+ */
+function removeStubEntryByAnchor(content: string, anchorId: string, stubsKey: string): string {
+    const lines = content.split('\n');
+
+    // Find frontmatter boundaries
+    if (lines[0] !== '---') return content;
+
+    const endIndex = lines.findIndex((line, idx) => idx > 0 && line === '---');
+    if (endIndex === -1) return content;
+
+    // Find stubs key line - match "stubs:" with optional trailing whitespace
+    const stubsKeyLine = lines.findIndex((line, idx) => {
+        if (idx <= 0 || idx >= endIndex) return false;
+        const trimmed = line.trimEnd();
+        return trimmed === `${stubsKey}:` || line.startsWith(`${stubsKey}: `);
     });
+    if (stubsKeyLine === -1) return content;
+
+    // Find all stub entries
+    const entries = findStubEntries(lines, stubsKeyLine);
+
+    // Find entry with matching anchor
+    const entryToRemove = entries.find(entry => {
+        return entry.content.includes(`anchor: ${anchorId}`) ||
+               entry.content.includes(`anchor: "${anchorId}"`) ||
+               entry.content.includes(`anchor: '${anchorId}'`);
+    });
+
+    if (!entryToRemove) return content;
+
+    // Remove the entry lines
+    const newLines = [
+        ...lines.slice(0, entryToRemove.startLine),
+        ...lines.slice(entryToRemove.endLine + 1),
+    ];
+
+    // Check if stubs array is now empty (only has the key line with no entries)
+    const remainingEntries = findStubEntries(newLines, stubsKeyLine);
+    if (remainingEntries.length === 0) {
+        // Remove the stubs key line entirely
+        newLines.splice(stubsKeyLine, 1);
+    }
+
+    return newLines.join('\n');
+}
+
+/**
+ * Remove a stub entry by type and description using direct string manipulation
+ */
+function removeStubEntryByTypeAndDescription(
+    content: string,
+    stubType: string,
+    description: string,
+    stubsKey: string
+): string {
+    const lines = content.split('\n');
+
+    // Find frontmatter boundaries
+    if (lines[0] !== '---') return content;
+
+    const endIndex = lines.findIndex((line, idx) => idx > 0 && line === '---');
+    if (endIndex === -1) return content;
+
+    // Find stubs key line - match "stubs:" with optional trailing whitespace
+    const stubsKeyLine = lines.findIndex((line, idx) => {
+        if (idx <= 0 || idx >= endIndex) return false;
+        const trimmed = line.trimEnd();
+        return trimmed === `${stubsKey}:` || line.startsWith(`${stubsKey}: `);
+    });
+    if (stubsKeyLine === -1) return content;
+
+    // Find all stub entries
+    const entries = findStubEntries(lines, stubsKeyLine);
+
+    // Escape special regex characters in description
+    const escapedDesc = description.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Find entry with matching type and description
+    const entryToRemove = entries.find(entry => {
+        // Compact syntax: "  - type: description" or "  - type: "description""
+        const compactPattern = new RegExp(`^\\s*-\\s*${stubType}:\\s*["']?${escapedDesc}["']?\\s*$`, 'm');
+        if (compactPattern.test(entry.content)) return true;
+
+        // Also check for type key followed by description
+        const hasType = entry.content.includes(`- ${stubType}:`) || entry.content.includes(`- ${stubType} :`);
+        const hasDesc = entry.content.includes(`description: ${description}`) ||
+                       entry.content.includes(`description: "${description}"`) ||
+                       entry.content.includes(`description: '${description}'`) ||
+                       entry.content.includes(`: ${description}`) ||
+                       entry.content.includes(`: "${description}"`) ||
+                       entry.content.includes(`: '${description}'`);
+
+        // For compact syntax, the description is the value directly after type:
+        if (hasType) {
+            // Check if type line contains the description directly
+            const typeLinePattern = new RegExp(`-\\s*${stubType}:\\s*["']?${escapedDesc}["']?`);
+            if (typeLinePattern.test(entry.content)) return true;
+        }
+
+        return hasType && hasDesc;
+    });
+
+    if (!entryToRemove) return content;
+
+    // Remove the entry lines
+    const newLines = [
+        ...lines.slice(0, entryToRemove.startLine),
+        ...lines.slice(entryToRemove.endLine + 1),
+    ];
+
+    // Check if stubs array is now empty
+    const remainingEntries = findStubEntries(newLines, stubsKeyLine);
+    if (remainingEntries.length === 0) {
+        // Remove the stubs key line entirely
+        newLines.splice(stubsKeyLine, 1);
+    }
+
+    return newLines.join('\n');
 }
 
 /**
