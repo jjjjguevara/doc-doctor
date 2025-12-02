@@ -48,8 +48,8 @@ stubs:
       priority: high
       anchor: ^expand-def456
   - verify: "This statement contradicts Section 1.2" # compact stub
-    anchor: ^question-ghi789
-  - question: "What's the performance impact of the new approach from section 2.3?" # orphaned/unlinked stub
+    anchor: ^verify-ghi789
+  - question: "What's the performance impact of the new approach from section 2.3?" # orphaned stub
     
 ```
 
