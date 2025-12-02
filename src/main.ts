@@ -46,6 +46,8 @@ export default class LabeledAnnotations extends Plugin {
     editorSuggest: AnnotationSuggest;
     stubSuggest: StubSuggest;
     private unsubscribeCallbacks: Set<() => void> = new Set();
+    private syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+    private syncDebounceDelay = 150; // ms
 
     async onload() {
         await this.loadSettings();
@@ -98,6 +100,11 @@ export default class LabeledAnnotations extends Plugin {
 
     onunload() {
         tts.stop();
+        // Clear any pending debounce timer
+        if (this.syncDebounceTimer) {
+            clearTimeout(this.syncDebounceTimer);
+            this.syncDebounceTimer = null;
+        }
         for (const callback of this.unsubscribeCallbacks) {
             callback();
         }
@@ -141,6 +148,7 @@ export default class LabeledAnnotations extends Plugin {
             // Register event to sync stubs when file changes
             this.registerEvent(
                 this.app.workspace.on('active-leaf-change', () => {
+                    // Immediate sync on leaf change (user switched files)
                     this.syncStubsForActiveFile();
                 })
             );
@@ -149,7 +157,8 @@ export default class LabeledAnnotations extends Plugin {
                 this.app.metadataCache.on('changed', (file) => {
                     const activeFile = this.app.workspace.getActiveFile();
                     if (activeFile && file.path === activeFile.path) {
-                        this.syncStubsForActiveFile();
+                        // Debounced sync on file content changes to prevent UI freeze
+                        this.debouncedSyncStubsForActiveFile();
                     }
                 })
             );
@@ -185,17 +194,31 @@ export default class LabeledAnnotations extends Plugin {
     }
 
     /**
+     * Debounced version of syncStubsForActiveFile to prevent UI freeze
+     * when rapid file changes occur (e.g., accepting suggestions)
+     */
+    debouncedSyncStubsForActiveFile() {
+        if (this.syncDebounceTimer) {
+            clearTimeout(this.syncDebounceTimer);
+        }
+        this.syncDebounceTimer = setTimeout(() => {
+            this.syncDebounceTimer = null;
+            this.syncStubsForActiveFile();
+        }, this.syncDebounceDelay);
+    }
+
+    /**
      * Add CSS styles for stub anchor decorations and suggest dropdown
      */
     addStubStyles() {
         const styleEl = document.createElement('style');
-        styleEl.id = 'm-stubs-styles';
+        styleEl.id = 'doc-doctor-styles';
         styleEl.textContent = stubAnchorStyles + '\n' + stubSuggestStyles;
         document.head.appendChild(styleEl);
 
         // Clean up on unload
         this.register(() => {
-            const el = document.getElementById('m-stubs-styles');
+            const el = document.getElementById('doc-doctor-styles');
             if (el) {
                 el.remove();
             }

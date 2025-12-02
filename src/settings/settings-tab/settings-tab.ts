@@ -6,6 +6,7 @@ import { NoteSettings } from './components/note-settings/note-settings';
 import { LabelsSettings } from './components/label-settings/labels-settings';
 import { ClipboardSettings } from './components/clipboard-settings';
 import { StubsSettings } from '../../stubs/settings/stubs-settings';
+import { LLMSettings } from './llm-settings';
 
 export class SettingsTab extends PluginSettingTab {
     plugin: LabeledAnnotations;
@@ -41,6 +42,10 @@ export class SettingsTab extends PluginSettingTab {
             containerEl: containerEl.createEl('div'),
         });
         StubsSettings({
+            plugin: this.plugin,
+            containerEl: containerEl.createEl('div'),
+        });
+        LLMSettings({
             plugin: this.plugin,
             containerEl: containerEl.createEl('div'),
         });

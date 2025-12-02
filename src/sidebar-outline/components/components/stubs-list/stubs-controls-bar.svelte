@@ -19,36 +19,28 @@
 
     export let plugin: LabeledAnnotations;
 
-    let showSearch = false;
     let showTypeDropdown = false;
-    let searchInput: HTMLInputElement;
 
     $: config = $stubsConfig;
     $: stubTypes = config ? getSortedStubTypes(config) : [];
     $: hasActiveFilters = $activeTypeFilters.size > 0;
     $: activeFilterCount = $activeTypeFilters.size;
+    $: showSearch = $controls.showStubsSearch;
 
     const toggleSettings = () => {
         controls.dispatch({ type: 'TOGGLE_STUBS_SETTINGS' });
     };
 
     const toggleSearch = () => {
-        showSearch = !showSearch;
+        controls.dispatch({ type: 'TOGGLE_STUBS_SEARCH' });
         showTypeDropdown = false;
-        if (showSearch) {
-            // Close settings view when opening search
-            if ($controls.showStubsSettings) {
-                controls.dispatch({ type: 'TOGGLE_STUBS_SETTINGS' });
-            }
-            setTimeout(() => searchInput?.focus(), 50);
-        } else {
+        if (!showSearch) {
             setFilterText('');
         }
     };
 
     const toggleTypeDropdown = () => {
         showTypeDropdown = !showTypeDropdown;
-        showSearch = false;
     };
 
     const handleTypeToggle = (typeKey: string) => {
@@ -57,16 +49,6 @@
 
     const handleClearFilters = () => {
         clearTypeFilters();
-    };
-
-    const handleSearchInput = (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        setFilterText(target.value);
-    };
-
-    const clearSearch = () => {
-        setFilterText('');
-        searchInput?.focus();
     };
 
     const syncStubs = () => {
@@ -96,6 +78,7 @@
     >
         <RefreshCw size={14} />
     </button>
+
     <button
         class="control-btn"
         class:active={showSearch}
@@ -183,23 +166,6 @@
     {/if}
 </div>
 
-{#if showSearch}
-    <div class="stubs-search">
-        <input
-            bind:this={searchInput}
-            type="text"
-            placeholder="Search stubs..."
-            value={$filterText}
-            on:input={handleSearchInput}
-            class="search-input"
-        />
-        {#if $filterText}
-            <button class="clear-btn" on:click={clearSearch} title="Clear search">
-                <X size={12} />
-            </button>
-        {/if}
-    </div>
-{/if}
 
 <style>
     .stubs-controls {
@@ -231,6 +197,10 @@
         color: var(--text-on-accent);
     }
 
+    .control-btn.disabled {
+        opacity: 0.5;
+    }
+
     .stub-count {
         font-size: var(--font-ui-smaller);
         color: var(--text-muted);
@@ -246,53 +216,6 @@
         background: rgba(255, 165, 0, 0.2);
         padding: 2px 6px;
         border-radius: 10px;
-    }
-
-    .stubs-search {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        width: 100%;
-        margin-top: 8px;
-        position: relative;
-    }
-
-    .search-input {
-        flex: 1;
-        padding: 4px 8px;
-        border: 1px solid var(--background-modifier-border);
-        border-radius: 4px;
-        background: var(--background-primary);
-        color: var(--text-normal);
-        font-size: var(--font-ui-smaller);
-        outline: none;
-    }
-
-    .search-input:focus {
-        border-color: var(--interactive-accent);
-    }
-
-    .search-input::placeholder {
-        color: var(--text-faint);
-    }
-
-    .clear-btn {
-        position: absolute;
-        right: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2px;
-        border: none;
-        background: transparent;
-        color: var(--text-muted);
-        cursor: pointer;
-        border-radius: 2px;
-    }
-
-    .clear-btn:hover {
-        color: var(--text-normal);
-        background: var(--background-modifier-hover);
     }
 
     /* Filter dropdown styles */

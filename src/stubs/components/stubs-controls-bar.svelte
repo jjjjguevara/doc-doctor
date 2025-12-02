@@ -30,12 +30,12 @@
 
     function handleInsertStub() {
         // Dispatch command to insert stub at cursor
-        plugin.app.commands.executeCommandById('m-stubs:insert-stub');
+        plugin.app.commands.executeCommandById('doc-doctor:insert-stub');
     }
 
     function handleSync() {
         // Dispatch command to sync stubs
-        plugin.app.commands.executeCommandById('m-stubs:sync-stubs');
+        plugin.app.commands.executeCommandById('doc-doctor:sync-stubs');
     }
 </script>
 

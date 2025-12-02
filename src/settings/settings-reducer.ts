@@ -17,6 +17,7 @@ import { formattedDate } from '../helpers/date-utils';
 import { DAYS_UNUSED } from './settings-selectors';
 import { ClipboardTemplateSection } from '../clipboard/helpers/annotations-to-text';
 import { StubsSettingsActions, stubsSettingsReducer } from '../stubs/stubs-settings-reducer';
+import { LLMSettingsActions, llmSettingsReducer } from '../llm/llm-settings-reducer';
 
 export type SettingsActions =
     | {
@@ -139,7 +140,8 @@ export type SettingsActions =
       }
     | { type: 'SET_DEFAULT_PALETTE'; payload: { palette: DefaultPalette } }
     | { type: 'SET_SIDEBAR_VIEW_MODE'; payload: { mode: SidebarViewMode } }
-    | StubsSettingsActions;
+    | StubsSettingsActions
+    | LLMSettingsActions;
 
 const updateState = (store: Settings, action: SettingsActions) => {
     const labels = store.decoration.styles.labels;
@@ -248,6 +250,9 @@ const updateState = (store: Settings, action: SettingsActions) => {
     } else if (action.type.startsWith('STUBS_')) {
         // Delegate stubs actions to stubs reducer
         stubsSettingsReducer(store.stubs, action as StubsSettingsActions);
+    } else if (action.type.startsWith('LLM_')) {
+        // Delegate LLM actions to LLM reducer
+        llmSettingsReducer(store.llm, action as LLMSettingsActions);
     }
 };
 export const settingsReducer = (

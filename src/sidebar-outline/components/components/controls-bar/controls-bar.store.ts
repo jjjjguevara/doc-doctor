@@ -9,7 +9,7 @@ export const isReading = writable<boolean>(false);
 
 export const pluginIdle = writable(false);
 
-export type ViewMode = 'annotations' | 'stubs';
+export type ViewMode = 'annotations' | 'stubs' | 'ai';
 
 type Controls = {
     showSearchInput: boolean;
@@ -19,6 +19,7 @@ type Controls = {
     showOutlineSettings: boolean;
     viewMode: ViewMode;
     showStubsSettings: boolean;
+    showStubsSearch: boolean;
 };
 
 type ControlsAction =
@@ -28,7 +29,8 @@ type ControlsAction =
     | { type: 'TOGGLE_SEARCH_INPUT' }
     | { type: 'TOGGLE_LABELS_FILTERS' }
     | { type: 'SET_VIEW_MODE'; payload: ViewMode }
-    | { type: 'TOGGLE_STUBS_SETTINGS' };
+    | { type: 'TOGGLE_STUBS_SETTINGS' }
+    | { type: 'TOGGLE_STUBS_SEARCH' };
 
 const updateState = (store: Controls, action: ControlsAction) => {
     if (action.type === 'TOGGLE_SEARCH_INPUT') {
@@ -62,11 +64,18 @@ const updateState = (store: Controls, action: ControlsAction) => {
         // Reset view-specific settings when switching
         store.showStylesSettings = false;
         store.showStubsSettings = false;
+        store.showStubsSearch = false;
     } else if (action.type === 'TOGGLE_STUBS_SETTINGS') {
         store.showStubsSettings = !store.showStubsSettings;
         if (store.showStubsSettings) {
             store.showStylesSettings = false;
             store.showOutlineSettings = false;
+            store.showStubsSearch = false;
+        }
+    } else if (action.type === 'TOGGLE_STUBS_SEARCH') {
+        store.showStubsSearch = !store.showStubsSearch;
+        if (store.showStubsSearch) {
+            store.showStubsSettings = false;
         }
     }
 };
@@ -84,6 +93,7 @@ export const controls = new Store<Controls, ControlsAction>(
         showOutlineSettings: false,
         viewMode: 'annotations',
         showStubsSettings: false,
+        showStubsSearch: false,
     },
     reducer,
 );

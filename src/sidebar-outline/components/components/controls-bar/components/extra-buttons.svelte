@@ -1,9 +1,8 @@
 <script lang="ts">
-    import NavButton from './clickable-icon.svelte';
     import { l } from '../../../../../lang/lang';
     import { controls, isReading } from '../controls-bar.store';
     import { tts } from '../helpers/tts';
-    import { Paintbrush, Settings } from 'lucide-svelte';
+    import { Paintbrush, Settings, ClipboardCopy, FileAudio, StopCircle } from 'lucide-svelte';
     import LabeledAnnotations from '../../../../../main';
     import { get } from 'svelte/store';
     import { filteredBySearchAndCategory } from '../../annotations-list/annotations-list.store';
@@ -54,97 +53,71 @@
     onDestroy(unsub);
 </script>
 
-<div class="nav-buttons-container">
-    <NavButton
-        isActive={$isReading}
-        label={l.OUTLINE_READ_ANNOTATIONS}
-        onClick={read}
+<div class="extra-controls">
+    <button
+        class="control-btn"
+        class:active={$isReading}
+        on:click={read}
+        title={l.OUTLINE_READ_ANNOTATIONS}
     >
         {#if $isReading}
-            <svg
-                class="svg-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <circle cx="12" cy="12" r="10" />
-                <rect width="6" height="6" x="9" y="9" />
-            </svg>
+            <StopCircle size={14} />
         {:else}
-            <svg
-                class="svg-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path
-                    d="M17.5 22h.5c.5 0 1-.2 1.4-.6.4-.4.6-.9.6-1.4V7.5L14.5 2H6c-.5 0-1 .2-1.4.6C4.2 3 4 3.5 4 4v3"
-                />
-                <polyline points="14 2 14 8 20 8" />
-                <path d="M10 20v-1a2 2 0 1 1 4 0v1a2 2 0 1 1-4 0Z" />
-                <path d="M6 20v-1a2 2 0 1 0-4 0v1a2 2 0 1 0 4 0Z" />
-                <path d="M2 19v-3a6 6 0 0 1 12 0v3" />
-            </svg>
+            <FileAudio size={14} />
         {/if}
-    </NavButton>
-    <NavButton
-        label={l.OUTLINE_COPY_ANNOTATIONS_TO_CLIPBOARD}
-        onClick={copyAnnotationsToClipboard}
+    </button>
+    <button
+        class="control-btn"
+        on:click={copyAnnotationsToClipboard}
+        title={l.OUTLINE_COPY_ANNOTATIONS_TO_CLIPBOARD}
     >
-        <svg
-            class="svg-icon lucide lucide-clipboard-copy"
-            fill="none"
-            height="18"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="18"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <rect height="4" rx="1" ry="1" width="8" x="8" y="2" />
-            <path
-                d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
-            />
-            <path d="M16 4h2a2 2 0 0 1 2 2v4" />
-            <path d="M21 14H11" />
-            <path d="m15 10-4 4 4 4" />
-        </svg>
-    </NavButton>
-
-    <NavButton
-        isActive={$controls.showStylesSettings}
-        label={l.OUTLINE_TOGGLE_STYLES_SETTINGS}
-        onClick={toggleShowStylesSettings}
+        <ClipboardCopy size={14} />
+    </button>
+    <button
+        class="control-btn"
+        class:active={$controls.showStylesSettings}
+        on:click={toggleShowStylesSettings}
+        title={l.OUTLINE_TOGGLE_STYLES_SETTINGS}
     >
-        <Paintbrush class="svg-icon" />
-    </NavButton>
-    <NavButton
-        isActive={$controls.showOutlineSettings}
-        label={l.OUTLINE_SETTINGS}
-        onClick={() => controls.dispatch({ type: 'TOGGLE_OUTLINE_SETTINGS' })}
+        <Paintbrush size={14} />
+    </button>
+    <button
+        class="control-btn"
+        class:active={$controls.showOutlineSettings}
+        on:click={() => controls.dispatch({ type: 'TOGGLE_OUTLINE_SETTINGS' })}
+        title={l.OUTLINE_SETTINGS}
     >
-        <Settings class="svg-icon" />
-    </NavButton>
+        <Settings size={14} />
+    </button>
 </div>
 
 <style>
-    .nav-buttons-container {
+    .extra-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .control-btn {
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 4px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.15s ease;
+    }
+
+    .control-btn:hover {
+        background: var(--background-modifier-hover);
+        color: var(--text-normal);
+    }
+
+    .control-btn.active {
+        background: var(--interactive-accent);
+        color: var(--text-on-accent);
     }
 </style>

@@ -13,7 +13,7 @@
 
     function handleResolveOrphanedStub(stubId: string) {
         // Dispatch command to resolve orphaned stub
-        plugin.app.commands.executeCommandById('m-stubs:resolve-orphaned-stub');
+        plugin.app.commands.executeCommandById('doc-doctor:resolve-orphaned-stub');
     }
 
     function handleResolveOrphanedAnchor(anchorId: string) {
@@ -26,7 +26,7 @@
 
     function handleRemoveOrphanedAnchor(anchorId: string) {
         // Dispatch command to remove orphaned anchor
-        plugin.app.commands.executeCommandById('m-stubs:remove-orphaned-anchor');
+        plugin.app.commands.executeCommandById('doc-doctor:remove-orphaned-anchor');
     }
 </script>
 

@@ -29,14 +29,14 @@ import { navigateToStub, navigateToAnchor } from '../helpers/stubs-navigation';
 export function registerStubsCommands(plugin: LabeledAnnotations): void {
     // Sync stubs
     plugin.addCommand({
-        id: 'm-stubs:sync-stubs',
+        id: 'doc-doctor:sync-stubs',
         name: 'Sync stubs with document',
         callback: () => syncStubsCommand(plugin),
     });
 
     // Insert stub at cursor
     plugin.addCommand({
-        id: 'm-stubs:insert-stub',
+        id: 'doc-doctor:insert-stub',
         name: 'Insert new stub at cursor',
         editorCallback: (editor, ctx) => {
             const view = ctx instanceof MarkdownView ? ctx : plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -46,21 +46,21 @@ export function registerStubsCommands(plugin: LabeledAnnotations): void {
 
     // Navigate to next stub
     plugin.addCommand({
-        id: 'm-stubs:next-stub',
+        id: 'doc-doctor:next-stub',
         name: 'Go to next stub',
         callback: () => navigateStubCommand(plugin, 'next'),
     });
 
     // Navigate to previous stub
     plugin.addCommand({
-        id: 'm-stubs:prev-stub',
+        id: 'doc-doctor:prev-stub',
         name: 'Go to previous stub',
         callback: () => navigateStubCommand(plugin, 'prev'),
     });
 
     // Resolve orphaned stub (create anchor)
     plugin.addCommand({
-        id: 'm-stubs:resolve-orphaned-stub',
+        id: 'doc-doctor:resolve-orphaned-stub',
         name: 'Resolve orphaned stub (create anchor)',
         editorCallback: (editor, ctx) => {
             const view = ctx instanceof MarkdownView ? ctx : plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -70,7 +70,7 @@ export function registerStubsCommands(plugin: LabeledAnnotations): void {
 
     // Remove orphaned anchor
     plugin.addCommand({
-        id: 'm-stubs:remove-orphaned-anchor',
+        id: 'doc-doctor:remove-orphaned-anchor',
         name: 'Remove orphaned anchor',
         editorCallback: (editor, ctx) => {
             const view = ctx instanceof MarkdownView ? ctx : plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -80,7 +80,7 @@ export function registerStubsCommands(plugin: LabeledAnnotations): void {
 
     // Quick add stub from selection
     plugin.addCommand({
-        id: 'm-stubs:add-stub-from-selection',
+        id: 'doc-doctor:add-stub-from-selection',
         name: 'Create stub from selection',
         editorCallback: (editor, ctx) => {
             const view = ctx instanceof MarkdownView ? ctx : plugin.app.workspace.getActiveViewOfType(MarkdownView);

@@ -1,9 +1,9 @@
 {
-    "id": "m-stubs",
-    "name": "M-Stubs",
+    "id": "doc-doctor",
+    "name": "Doc Doctor",
     "version": "0.2.0",
     "minAppVersion": "0.15.0",
-    "description": "Vector-based stubs system for tracking document gaps with J-Editorial Framework integration. Fork of Enhanced Annotations by ycnmhd.",
+    "description": "AI-powered document analysis and stub tracking for Obsidian with J-Editorial Framework integration. Fork of Enhanced Annotations by ycnmhd.",
     "author": "Josué Guevara",
     "authorUrl": "https://github.com/jjjjguevara",
     "isDesktopOnly": true

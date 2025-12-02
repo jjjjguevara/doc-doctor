@@ -2,6 +2,7 @@ import { Settings } from './settings-type';
 import { copiedAnnotationsTemplates } from '../clipboard/helpers/annotations-to-text';
 import { noteTemplate } from '../note-creation/create-note-file';
 import { DEFAULT_STUBS_CONFIGURATION } from '../stubs/stubs-defaults';
+import { DEFAULT_LLM_CONFIGURATION } from '../llm/llm-types';
 
 export const DEFAULT_SETTINGS = (): Settings => ({
     editorSuggest: {
@@ -53,4 +54,5 @@ export const DEFAULT_SETTINGS = (): Settings => ({
         templates: copiedAnnotationsTemplates,
     },
     stubs: DEFAULT_STUBS_CONFIGURATION(),
+    llm: DEFAULT_LLM_CONFIGURATION(),
 });

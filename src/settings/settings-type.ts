@@ -1,6 +1,7 @@
 import { AnnotationType } from '../sidebar-outline/components/components/annotations-list/annotations-list.store';
 import { ClipboardTemplates } from '../clipboard/helpers/annotations-to-text';
 import { StubsConfiguration } from '../stubs/stubs-types';
+import { LLMConfiguration } from '../llm/llm-types';
 
 export type Case = 'upper' | 'lower' | 'title';
 export type Opacity = 80 | 60 | 40 | 20;
@@ -54,7 +55,7 @@ export type DateString = string;
 
 export type DefaultPalette = 'bright' | 'dull';
 
-export type SidebarViewMode = 'annotations' | 'stubs';
+export type SidebarViewMode = 'annotations' | 'stubs' | 'ai';
 
 export type Settings = {
     editorSuggest: {
@@ -99,4 +100,5 @@ export type Settings = {
         daysUnused: [DateString?, DateString?, DateString?];
     };
     stubs: StubsConfiguration;
+    llm: LLMConfiguration;
 };

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { Bookmark } from 'lucide-svelte';
+    import { BookDashed } from 'lucide-svelte';
 </script>
 
 <div class="no-stubs">
     <div class="no-stubs-icon">
-        <Bookmark size={24} />
+        <BookDashed size={24} />
     </div>
     <p class="no-stubs-text">No stubs in this document</p>
     <p class="no-stubs-hint">

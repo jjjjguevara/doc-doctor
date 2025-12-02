@@ -10,6 +10,22 @@
 // =============================================================================
 
 /**
+ * Vector family for stub types (J-Editorial Framework)
+ */
+export type VectorFamily = 'Retrieval' | 'Computation' | 'Synthesis' | 'Creation' | 'Structural';
+
+/**
+ * Ontological dimension for stub types (J-Editorial Framework)
+ */
+export type OntologicalDimension =
+    | 'Epistemic Status'      // Truth/evidence concerns
+    | 'Content Completeness'  // Coverage concerns
+    | 'Structural Quality'    // Organization concerns
+    | 'Perspective'           // Bias/neutrality concerns
+    | 'Dependencies'          // External constraints
+    | 'Workflow';             // Process/action concerns
+
+/**
  * Level 1: Stub type definition (user-configurable vocabulary)
  */
 export interface StubTypeDefinition {
@@ -31,6 +47,40 @@ export interface StubTypeDefinition {
     defaults?: Record<string, unknown>;
     /** Sort order in UI (lower = first) */
     sortOrder: number;
+
+    // ==========================================================================
+    // LLM SEMANTIC FIELDS (for AI-powered stub suggestions)
+    // ==========================================================================
+
+    /**
+     * Detailed explanation of when to use this stub type.
+     * Used by LLM to understand the semantic purpose of the stub.
+     * @example "Use when a factual claim lacks supporting evidence or citation."
+     */
+    semanticPurpose?: string;
+
+    /**
+     * The vector family this type belongs to (J-Editorial Framework).
+     * Enables intelligent routing to appropriate resolution strategies.
+     */
+    vectorFamily?: VectorFamily;
+
+    /**
+     * The ontological dimension this type addresses (J-Editorial Framework).
+     * Provides categorical context for gap classification.
+     */
+    ontologicalDimension?: OntologicalDimension;
+
+    /**
+     * Example indicators the LLM should look for in document content.
+     * Concrete patterns that suggest this stub type is needed.
+     */
+    indicators?: string[];
+
+    /**
+     * Anti-patterns: situations where this type should NOT be used.
+     */
+    antiPatterns?: string[];
 }
 
 /**

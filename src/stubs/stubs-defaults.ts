@@ -26,6 +26,23 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Citation needed',
         defaults: { stub_form: 'persistent' },
         sortOrder: 1,
+        // LLM semantic fields
+        semanticPurpose: `Use when a factual claim, statistic, quote, or technical specification lacks supporting evidence or citation. This stub signals that readers cannot verify the information without an authoritative source. Common triggers include: numerical data, historical facts, API specifications, protocol references, quoted statements, and any claim that makes a testable assertion about the world.`,
+        vectorFamily: 'Retrieval',
+        ontologicalDimension: 'Epistemic Status',
+        indicators: [
+            'Statistics or numerical claims without source',
+            'Quoted text without attribution',
+            'Technical specifications without reference',
+            '"According to..." without link',
+            'Historical facts or dates',
+            'Claims about external systems or standards',
+        ],
+        antiPatterns: [
+            'Self-evident truths that need no citation',
+            "Author's own opinions clearly marked as such",
+            'Content already marked with placeholder citations',
+        ],
     },
     clarify: {
         id: 'clarify',
@@ -37,6 +54,23 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Needs clarification',
         defaults: { stub_form: 'transient' },
         sortOrder: 2,
+        // LLM semantic fields
+        semanticPurpose: `Use when content is ambiguous, vague, or could be interpreted multiple ways. This stub signals that the meaning is unclear and requires additional precision or context. Unlike "Question" (unknown answer) or "Expand" (insufficient depth), this addresses content that exists but lacks clarity.`,
+        vectorFamily: 'Computation',
+        ontologicalDimension: 'Content Completeness',
+        indicators: [
+            'Ambiguous pronouns or references',
+            'Unclear scope or boundaries',
+            'Jargon without definition',
+            'Vague quantifiers (some, many, few)',
+            'Implicit assumptions not stated',
+            'Terms used inconsistently',
+        ],
+        antiPatterns: [
+            'Content that is simply incomplete (use Expand)',
+            'Content with unknown answers (use Question)',
+            'Intentionally general overview content',
+        ],
     },
     expand: {
         id: 'expand',
@@ -48,6 +82,23 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Expand this section',
         defaults: { stub_form: 'transient' },
         sortOrder: 3,
+        // LLM semantic fields
+        semanticPurpose: `Use when a topic is introduced but not sufficiently developed for the document's intended audience. This stub signals that the current content provides a foundation but lacks depth, examples, or elaboration needed for comprehension. The gap is about insufficient coverage, not missing evidence.`,
+        vectorFamily: 'Creation',
+        ontologicalDimension: 'Content Completeness',
+        indicators: [
+            'One-sentence explanations of complex topics',
+            'Bullet lists that could be paragraphs',
+            '"This section covers X" without covering X',
+            'Concepts introduced but not explained',
+            'Procedures described without steps',
+            'Empty or near-empty sections',
+        ],
+        antiPatterns: [
+            'Intentionally brief overview sections',
+            'Summaries meant to be concise',
+            'Content that links to detailed docs elsewhere',
+        ],
     },
     question: {
         id: 'question',
@@ -59,6 +110,22 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Open question',
         defaults: { stub_form: 'transient' },
         sortOrder: 4,
+        // LLM semantic fields
+        semanticPurpose: `Use when the author has an unresolved question that affects the content direction or accuracy. This stub surfaces uncertainty that requires research, stakeholder input, or decision-making before the content can be finalized. It represents the author's acknowledged knowledge boundary.`,
+        vectorFamily: 'Computation',
+        ontologicalDimension: 'Workflow',
+        indicators: [
+            'Explicit question marks in content',
+            '"TODO: decide..." or similar markers',
+            'Multiple alternatives presented without choice',
+            'Uncertainty language: "might", "could", "possibly"',
+            'Placeholders like TBD, TBA, XXX',
+        ],
+        antiPatterns: [
+            'Rhetorical questions for effect',
+            'Questions answered in following text',
+            'FAQ-style content structure',
+        ],
     },
     verify: {
         id: 'verify',
@@ -70,6 +137,22 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Needs verification',
         defaults: { stub_form: 'transient' },
         sortOrder: 5,
+        // LLM semantic fields
+        semanticPurpose: `Use when content exists but its accuracy is uncertain and needs fact-checking. Unlike "Citation Needed" (missing source), this indicates the content may already have sources but the facts themselves need verification. This is common for outdated information, secondary sources, or rapidly changing domains.`,
+        vectorFamily: 'Retrieval',
+        ontologicalDimension: 'Epistemic Status',
+        indicators: [
+            'Dates or versions that may be outdated',
+            'Information from secondary sources',
+            'Content copied from other documents',
+            'Technical details that may have changed',
+            'Third-party features or integrations',
+        ],
+        antiPatterns: [
+            'Content that simply needs a citation (use Citation Needed)',
+            'Content known to be wrong (use Blocker)',
+            'Theoretical or opinion content',
+        ],
     },
     controversy: {
         id: 'controversy',
@@ -81,6 +164,22 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Disputed content',
         defaults: { stub_form: 'blocking' },
         sortOrder: 6,
+        // LLM semantic fields
+        semanticPurpose: `Use when there are conflicting perspectives, interpretations, or approaches that need resolution or balanced presentation. This stub signals that reasonable people disagree and the content should either acknowledge multiple viewpoints or a decision needs to be made.`,
+        vectorFamily: 'Synthesis',
+        ontologicalDimension: 'Perspective',
+        indicators: [
+            'Contradicting sources or recommendations',
+            'Industry debates without consensus',
+            'Multiple valid approaches described',
+            'Content that sparked disagreement in review',
+            'One-sided presentation of contested topic',
+        ],
+        antiPatterns: [
+            'Simple factual errors (use Blocker)',
+            'Personal preference differences',
+            'Already balanced multi-perspective content',
+        ],
     },
     blocker: {
         id: 'blocker',
@@ -92,6 +191,25 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'Blocking issue',
         defaults: { stub_form: 'blocking' },
         sortOrder: 7,
+        // LLM semantic fields
+        semanticPurpose: `Use when there is a known error, critical issue, or missing prerequisite that must be resolved before the document can be considered usable. This stub differs from others by indicating urgency and blocking status—the document should not be promoted or published with this stub unresolved.`,
+        vectorFamily: 'Creation',
+        ontologicalDimension: 'Epistemic Status',
+        indicators: [
+            'Contradictions within the document',
+            'Outdated information (dates, versions)',
+            'Broken links or references',
+            'Code examples that do not compile',
+            'Incorrect technical specifications',
+            'Logical inconsistencies',
+            'Missing critical prerequisites',
+        ],
+        antiPatterns: [
+            'Content that is merely incomplete',
+            'Opinions that someone disagrees with',
+            'Alternative approaches (not errors)',
+            'Nice-to-have improvements',
+        ],
     },
     todo: {
         id: 'todo',
@@ -103,6 +221,21 @@ const DEFAULT_STUB_TYPES: Record<string, StubTypeDefinition> = {
         defaultStubDescription: 'TODO',
         defaults: { stub_form: 'transient' },
         sortOrder: 8,
+        // LLM semantic fields
+        semanticPurpose: `Use for general task reminders or action items that don't fit other categories. This is a catch-all for workflow items like "review later", "add screenshots", or "check with team". For more specific gaps, prefer the specialized stub types.`,
+        vectorFamily: 'Creation',
+        ontologicalDimension: 'Workflow',
+        indicators: [
+            'Explicit TODO or FIXME markers',
+            'Inline comments about future work',
+            'Placeholder content like [TBD]',
+            'Notes to self about improvements',
+        ],
+        antiPatterns: [
+            'Gaps better served by specific types',
+            'Long-term aspirational improvements',
+            'Stylistic preferences',
+        ],
     },
 };
 

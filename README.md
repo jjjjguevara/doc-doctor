@@ -103,12 +103,13 @@ Some text that needs a citation. ^stub-abc123
 Frontmatter:
 ```yaml
 stubs:
-  - link: "Citation needed." ^stub-abc123
+  - link: "Citation needed."
+    anchor: ^stub-abc123
 ```
 
 #### Structured Syntax (`^^^`)
 ```markdown
-This section needs expansion. ^stub-def456
+*A section needing expansion.* ^stub-def456
 ```
 Frontmatter:
 ```yaml
@@ -117,7 +118,7 @@ stubs:
       description: "Add more details"
       stub_form: persistent
       priority: medium
-    ^stub-def456
+      anchor: ^stub-def456
 ```
 
 ### Sidebar Controls

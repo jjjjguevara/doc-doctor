@@ -1000,6 +1000,33 @@ Deployment process goes here. ^stub-deploy
 
 ---
 
+---
+
+## 10. Future Enhancements
+
+### 10.1 LLM-Powered Stub Suggestions (v0.3.0)
+
+A "magic wand" button that uses an LLM to analyze the current document and suggest stubs for knowledge gaps, missing citations, incomplete sections, and other editorial demands.
+
+**Key capabilities**:
+- Analyze document content against configured stub types
+- Use semantic purpose definitions to match gaps to appropriate stub types
+- Suggest `stub_form`, `priority`, and inline anchor locations
+- Support multiple LLM providers (OpenAI, Anthropic, Ollama)
+- External schema files (`.yaml`/`.json`) for stub type definitions
+
+See [SPEC-llm-stub-suggestions.md](./SPEC-llm-stub-suggestions.md) for complete specification.
+
+### 10.2 Dashboard Integration (v0.4.0)
+
+Dataview queries and dashboard widgets for aggregating stub metrics across documents:
+- `stub_health` score calculation
+- Vector workload visualization
+- Controversy detection alerts
+- Resolution velocity tracking
+
+---
+
 **Document History**:
 - 2025-12-01 v0.1.0: Initial draft
 - 2025-12-01 v0.2.0: Revised with user feedback
@@ -1008,3 +1035,6 @@ Deployment process goes here. ^stub-deploy
   - Added anchor auto-generation matching Obsidian semantics
   - Confirmed 2-level configuration (both levels customizable)
   - Added inline highlighting matching annotation behavior
+- 2025-12-01 v0.2.1: Added future enhancements section
+  - Referenced LLM-powered stub suggestions spec
+  - Outlined dashboard integration roadmap

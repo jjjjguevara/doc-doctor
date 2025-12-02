@@ -1,93 +1,104 @@
 <script lang="ts">
-	import TabsFilter from './components/tabs-filter.svelte';
-	import SearchInput from './components/search-input.svelte';
 	import { controls } from './controls-bar.store';
-	import NavButton from './components/clickable-icon.svelte';
 	import { l } from '../../../../lang/lang';
 	import { searchTerm } from './components/search-input.store';
 	import { ListFilter, MoreHorizontal, Search } from 'lucide-svelte';
 	import { filteredHiddenCategories, filteredHiddenLabels } from '../annotations-list/annotations-list.store';
-	import SecondaryControlsBar from './components/extra-buttons.svelte';
-	import LabeledAnnotations from '../../../../main';
-	import OutlineSettings from './components/outline-settings.svelte';
 
-	export let plugin: LabeledAnnotations;
+	$: hasActiveFilters = $filteredHiddenLabels.size > 0 || $filteredHiddenCategories.size > 0;
+
 	const toggleLabelsFilter = () => {
-		controls.dispatch({type:"TOGGLE_LABELS_FILTERS"})
+		controls.dispatch({type:"TOGGLE_LABELS_FILTERS"});
+		if ($controls.showSearchInput) {
+			controls.dispatch({type:"TOGGLE_SEARCH_INPUT"});
+		}
 	};
-	const toggleShowSearchInput = () => {
-		controls.dispatch({type:"TOGGLE_SEARCH_INPUT"})
+
+	const toggleSearch = () => {
+		controls.dispatch({type:"TOGGLE_SEARCH_INPUT"});
+		if ($controls.showLabelsFilter) {
+			controls.dispatch({type:"TOGGLE_LABELS_FILTERS"});
+		}
 	};
 
 	const toggleSecondaryControlsBar = () => {
-		controls.dispatch({type:"TOGGLE_EXTRA_BUTTONS"})
+		controls.dispatch({type:"TOGGLE_EXTRA_BUTTONS"});
 	};
-
-
-
-
 </script>
 
-<div class="outline-controls">
-	<div class="nav-buttons-container">
-		<NavButton
-			hasEnabledItems={!!$searchTerm}
-			isActive={$controls.showSearchInput}
-			label={l.OUTLINE_SEARCH_ANNOTATIONS}
-			onClick={toggleShowSearchInput}
-		>
-			<Search class="svg-icon" />
-		</NavButton>
-		<NavButton
-			hasEnabledItems={$filteredHiddenLabels.size > 0 ||
-                $filteredHiddenCategories.size > 0}
-			isActive={$controls.showLabelsFilter}
-			label={l.OUTLINE_FILTER_ANNOTATIONS}
-			onClick={toggleLabelsFilter}
-		>
-			<ListFilter class="svg-icon" />
-		</NavButton>
-		<NavButton
-			isActive={$controls.showExtraButtons}
-			label={l.OUTLINE_SHOW_ALL_CONTROLS}
-			onClick={toggleSecondaryControlsBar}
-		>
-			<MoreHorizontal class="svg-icon" />
-		</NavButton>
-	</div>
-
-	{#if $controls.showExtraButtons}
-		<SecondaryControlsBar plugin={plugin} />
-	{/if}
-
-	{#if $controls.showSearchInput}
-		<SearchInput />
-	{/if}
-	{#if $controls.showLabelsFilter}
-		<TabsFilter />
-	{/if}
-	{#if $controls.showOutlineSettings}
-		<OutlineSettings/>
+<div class="annotations-controls">
+	<button
+		class="control-btn"
+		class:active={$controls.showSearchInput || !!$searchTerm}
+		on:click={toggleSearch}
+		title={l.OUTLINE_SEARCH_ANNOTATIONS}
+	>
+		<Search size={14} />
+	</button>
+	<button
+		class="control-btn"
+		class:active={$controls.showLabelsFilter || hasActiveFilters}
+		on:click={toggleLabelsFilter}
+		title={l.OUTLINE_FILTER_ANNOTATIONS}
+	>
+		<ListFilter size={14} />
+		{#if hasActiveFilters}
+			<span class="filter-badge">!</span>
 		{/if}
+	</button>
+	<button
+		class="control-btn"
+		class:active={$controls.showExtraButtons}
+		on:click={toggleSecondaryControlsBar}
+		title={l.OUTLINE_SHOW_ALL_CONTROLS}
+	>
+		<MoreHorizontal size={14} />
+	</button>
 </div>
 <style>
-	.outline-controls {
+	.annotations-controls {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-
-		width: 100%;
-		gap: 10px;
-		align-self: center;
-		justify-self: center;
-		box-sizing: border-box;
-		height: auto;
+		gap: 4px;
 	}
 
-	.nav-buttons-container {
+	.control-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		padding: 4px;
+		border: none;
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+		border-radius: 4px;
+		transition: all 0.15s ease;
+		position: relative;
+	}
+
+	.control-btn:hover {
+		background: var(--background-modifier-hover);
+		color: var(--text-normal);
+	}
+
+	.control-btn.active {
+		background: var(--interactive-accent);
+		color: var(--text-on-accent);
+	}
+
+	.filter-badge {
+		position: absolute;
+		top: -2px;
+		right: -2px;
+		min-width: 14px;
+		height: 14px;
+		font-size: 9px;
+		font-weight: 600;
+		line-height: 14px;
+		text-align: center;
+		background: var(--interactive-accent);
+		color: var(--text-on-accent);
+		border-radius: 7px;
+		padding: 0 3px;
 	}
 </style>
