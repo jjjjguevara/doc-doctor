@@ -185,7 +185,7 @@ Access settings via **Settings → Doc Doctor** or the gear icon in the stubs si
 
 ## J-Editorial Framework Integration
 
-Doc Doctor implements the [J-Editorial Stubs Standard](https://jjjjguevara.vercel.app/j-editorial/framework/02-practice/stubs/spec-stubs-standard), a comprehensive quality control framework for knowledge management.
+Doc Doctor implements the [J-Editorial Framework](https://jjjjguevara.vercel.app/j-editorial/), a comprehensive quality control framework for knowledge management.
 
 ### Three-Layer Architecture
 
