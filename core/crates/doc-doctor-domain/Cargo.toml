@@ -1,0 +1,23 @@
+[package]
+name = "doc-doctor-domain"
+description = "Pure domain layer for Doc Doctor - J-Editorial entities and calculations"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+# Serde for derive macros
+serde = { workspace = true }
+
+# YAML value type for flexible stub deserialization
+# (Needed to support J-Editorial's multiple stub formats)
+serde_yaml = { workspace = true }
+
+# DateTime handling (needed for freshness calculations)
+chrono = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+pretty_assertions = { workspace = true }

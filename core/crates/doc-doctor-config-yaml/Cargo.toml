@@ -1,0 +1,25 @@
+[package]
+name = "doc-doctor-config-yaml"
+description = "YAML configuration provider adapter for doc-doctor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+doc-doctor-domain = { path = "../doc-doctor-domain" }
+
+# Serialization
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Path handling
+dirs = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10"
+pretty_assertions = { workspace = true }

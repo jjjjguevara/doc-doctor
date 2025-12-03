@@ -3,7 +3,7 @@
     import { onMount, onDestroy } from 'svelte';
     import { writable } from 'svelte/store';
     import { Check, X, AlertCircle, ChevronDown, ChevronUp, ChevronRight, Sparkles, Link, ExternalLink, BookOpen, Brain, Loader2, Wand2 } from 'lucide-svelte';
-    import { llmAnalysisState, clearSuggestions, removeSuggestion, removeReference, setActiveTab, toggleStreamingExpanded, triggerLLMAnalysis } from '../../../../stubs/llm-analysis-store';
+    import { llmAnalysisState, clearSuggestions, removeSuggestion, removeReference, setActiveTab, toggleStreamingExpanded, triggerLLMAnalysis, clearRemediateMode } from '../../../../stubs/llm-analysis-store';
     import { stubsConfig } from '../../../../stubs/stubs-store';
     import { generateAnchorId, insertAnchorAtLine, getValidAnchors } from '../../../../stubs/helpers/anchor-utils';
     import type LabeledAnnotations from '../../../../main';
@@ -48,6 +48,21 @@
     $: hasReferences = references.length > 0;
     $: hasContent = hasSuggestions || hasReferences;
     $: hasError = state.error !== null;
+    $: remediateMode = state.remediateMode;
+    $: remediateStub = state.remediateStub;
+
+    // Track previous remediate mode to detect transitions
+    let previousRemediateMode = false;
+
+    // Auto-trigger analysis when entering remediate mode
+    $: if (remediateMode && !previousRemediateMode && !isAnalyzing && isLLMConfigured) {
+        console.log('[Doc Doctor] Remediate mode activated, auto-triggering analysis for stub:', remediateStub);
+        previousRemediateMode = true;
+        // Trigger analysis - the triggerLLMAnalysis function will check for remediateStub
+        triggerLLMAnalysis(plugin);
+    } else if (!remediateMode && previousRemediateMode) {
+        previousRemediateMode = false;
+    }
 
     // Debug log state transitions
     $: console.log('[Doc Doctor] AIView state:', {
@@ -156,10 +171,12 @@
                 content = insertAnchorAtLine(content, adjustedLine, anchorId);
             }
 
+            // Always use manual YAML insertion to preserve existing formatting
+            // (MCP addStub reformats the entire stubs array which is undesirable)
             console.log('[Doc Doctor] Building stub entry...');
             const stubEntry = buildStubYamlEntry(suggestion, anchorId);
-            console.log('[Doc Doctor] Inserting YAML...');
             const newContent = insertYamlArrayItem(content, 'stubs', stubEntry);
+
             console.log('[Doc Doctor] Writing file...');
             await plugin.app.vault.modify(activeFile, newContent);
             console.log('[Doc Doctor] File written, removing suggestion...');
@@ -200,8 +217,26 @@
 
         try {
             const content = await plugin.app.vault.read(activeFile);
-            const refEntry = buildReferenceYamlEntry(reference);
-            const newContent = insertYamlArrayItem(content, propertyName, refEntry);
+            let newContent: string;
+
+            // Try MCP first if connected
+            const mcpTools = plugin.getMCPTools();
+            if (mcpTools && plugin.isMCPConnected()) {
+                console.log('[Doc Doctor] Using MCP to add reference...');
+                try {
+                    const result = await mcpTools.addReference(content, reference.target);
+                    newContent = result.updated_content;
+                    console.log('[Doc Doctor] MCP addReference success');
+                } catch (mcpError) {
+                    console.warn('[Doc Doctor] MCP addReference failed, falling back to manual:', mcpError);
+                    const refEntry = buildReferenceYamlEntry(reference);
+                    newContent = insertYamlArrayItem(content, propertyName, refEntry);
+                }
+            } else {
+                const refEntry = buildReferenceYamlEntry(reference);
+                newContent = insertYamlArrayItem(content, propertyName, refEntry);
+            }
+
             await plugin.app.vault.modify(activeFile, newContent);
 
             // Remove from references list immediately

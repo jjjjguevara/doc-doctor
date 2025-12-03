@@ -84,10 +84,16 @@ impl StateDimensions {
             // Placeholder values - these need external context
             compliance_fit: 1.0,
             trust_level: match props.origin {
-                crate::types::Origin::Human => 0.9,
-                crate::types::Origin::AiAssisted => 0.7,
-                crate::types::Origin::Ai => 0.5,
-                _ => 0.8,
+                // High trust: direct experience or requirements
+                crate::types::Origin::Requirement => 0.95,
+                crate::types::Origin::Insight => 0.9,
+                crate::types::Origin::Dialogue => 0.85,
+                // Medium trust: exploratory or derived
+                crate::types::Origin::Question => 0.8,
+                crate::types::Origin::Curiosity => 0.75,
+                crate::types::Origin::Derivative => 0.7,
+                // Lower trust: experimental/unverified
+                crate::types::Origin::Experimental => 0.6,
             },
             freshness: 1.0, // Would need modified date to calculate
             coverage_fit: 1.0,

@@ -3,8 +3,17 @@ import { copiedAnnotationsTemplates } from '../clipboard/helpers/annotations-to-
 import { noteTemplate } from '../note-creation/create-note-file';
 import { DEFAULT_STUBS_CONFIGURATION } from '../stubs/stubs-defaults';
 import { DEFAULT_LLM_CONFIGURATION } from '../llm/llm-types';
+import { DEFAULT_MCP_SETTINGS } from '../mcp/mcp-types';
+import { DEFAULT_PROMPT_SETTINGS } from '../llm/prompt-schema';
+import { DEFAULT_SMART_CONNECTIONS_SETTINGS } from '../smart-connections/types';
 
 export const DEFAULT_SETTINGS = (): Settings => ({
+    features: {
+        annotations: true,
+        stubs: true,
+        ai: true,
+        explore: true,
+    },
     editorSuggest: {
         enableAutoSuggest: true,
         triggerPhrase: '//',
@@ -55,4 +64,7 @@ export const DEFAULT_SETTINGS = (): Settings => ({
     },
     stubs: DEFAULT_STUBS_CONFIGURATION(),
     llm: DEFAULT_LLM_CONFIGURATION(),
+    mcp: DEFAULT_MCP_SETTINGS(),
+    prompts: DEFAULT_PROMPT_SETTINGS(),
+    smartConnections: DEFAULT_SMART_CONNECTIONS_SETTINGS,
 });

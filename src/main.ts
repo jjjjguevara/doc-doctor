@@ -1,4 +1,4 @@
-import { Menu, Plugin, TAbstractFile, TFile, TFolder, MarkdownView } from 'obsidian';
+import { Menu, Notice, Plugin, TAbstractFile, TFile, TFolder, MarkdownView } from 'obsidian';
 import { addInsertCommentCommands } from './commands/commands';
 import { Settings } from './settings/settings-type';
 import {
@@ -37,6 +37,12 @@ import {
     stubSuggestStyles,
 } from './stubs';
 
+// MCP imports
+import { MCPClient, MCPTools } from './mcp';
+
+// Smart Connections imports
+import { SmartConnectionsService, createSmartConnectionsService } from './smart-connections';
+
 export default class LabeledAnnotations extends Plugin {
     outline: OutlineUpdater;
     settings: Store<Settings, SettingsActions>;
@@ -45,6 +51,9 @@ export default class LabeledAnnotations extends Plugin {
     decorationSettings: DecorationSettings;
     editorSuggest: AnnotationSuggest;
     stubSuggest: StubSuggest;
+    mcpClient: MCPClient | null = null;
+    mcpTools: MCPTools | null = null;
+    smartConnectionsService: SmartConnectionsService | null = null;
     private unsubscribeCallbacks: Set<() => void> = new Set();
     private syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
     private syncDebounceDelay = 150; // ms
@@ -104,6 +113,12 @@ export default class LabeledAnnotations extends Plugin {
         if (this.syncDebounceTimer) {
             clearTimeout(this.syncDebounceTimer);
             this.syncDebounceTimer = null;
+        }
+        // Disconnect MCP client
+        if (this.mcpClient) {
+            this.mcpClient.disconnect().catch(console.error);
+            this.mcpClient = null;
+            this.mcpTools = null;
         }
         for (const callback of this.unsubscribeCallbacks) {
             callback();
@@ -165,8 +180,124 @@ export default class LabeledAnnotations extends Plugin {
 
             // Add CSS for stub decorations and suggest styles
             this.addStubStyles();
+
+            // Initialize MCP after stubs
+            this.initializeMCP();
+
+            // Initialize Smart Connections service
+            this.initializeSmartConnections();
         } catch (error) {
             console.error('Failed to initialize stubs module:', error);
+        }
+    }
+
+    /**
+     * Initialize MCP client if enabled
+     */
+    async initializeMCP(): Promise<void> {
+        const settings = this.settings.getValue();
+        if (!settings.mcp.enabled) {
+            console.log('[Doc Doctor] MCP is disabled in settings');
+            return;
+        }
+
+        try {
+            this.mcpClient = new MCPClient({
+                binaryPath: settings.mcp.binaryPath,
+                timeout: settings.mcp.connectionTimeout,
+            });
+
+            // Auto-connect if enabled
+            if (settings.mcp.autoConnect) {
+                await this.mcpClient.connect();
+                this.mcpTools = new MCPTools(this.mcpClient);
+                console.log('[Doc Doctor] MCP connected successfully');
+
+                // Show status bar if enabled
+                if (settings.mcp.showStatusBar) {
+                    new Notice('MCP connected');
+                }
+            }
+
+            // Subscribe to MCP events
+            this.mcpClient.on((event) => {
+                if (event.type === 'disconnected') {
+                    console.log('[Doc Doctor] MCP disconnected:', event.reason);
+                    this.mcpTools = null;
+                } else if (event.type === 'error') {
+                    console.error('[Doc Doctor] MCP error:', event.error);
+                } else if (event.type === 'reconnecting') {
+                    console.log('[Doc Doctor] MCP reconnecting, attempt:', event.attempt);
+                }
+            });
+
+            // Subscribe to settings changes to handle MCP enable/disable
+            this.unsubscribeCallbacks.add(
+                this.settings.subscribe(async () => {
+                    const newSettings = this.settings.getValue();
+                    if (!newSettings.mcp.enabled && this.mcpClient?.isConnected()) {
+                        await this.mcpClient.disconnect();
+                        this.mcpTools = null;
+                    } else if (newSettings.mcp.enabled && !this.mcpClient?.isConnected()) {
+                        try {
+                            await this.mcpClient?.connect();
+                            if (this.mcpClient) {
+                                this.mcpTools = new MCPTools(this.mcpClient);
+                            }
+                        } catch (error) {
+                            console.error('[Doc Doctor] Failed to reconnect MCP:', error);
+                        }
+                    }
+                })
+            );
+        } catch (error) {
+            console.error('[Doc Doctor] Failed to initialize MCP:', error);
+        }
+    }
+
+    /**
+     * Check if MCP is connected and tools are available
+     */
+    isMCPConnected(): boolean {
+        return this.mcpClient?.isConnected() ?? false;
+    }
+
+    /**
+     * Get MCP tools (returns null if not connected)
+     */
+    getMCPTools(): MCPTools | null {
+        return this.mcpTools;
+    }
+
+    /**
+     * Initialize Smart Connections service
+     */
+    initializeSmartConnections(): void {
+        try {
+            const settings = this.settings.getValue();
+            this.smartConnectionsService = createSmartConnectionsService(
+                this.app,
+                settings.smartConnections
+            );
+
+            // Subscribe to settings changes
+            this.unsubscribeCallbacks.add(
+                this.settings.subscribe(() => {
+                    const newSettings = this.settings.getValue();
+                    if (this.smartConnectionsService) {
+                        this.smartConnectionsService.updateSettings(newSettings.smartConnections);
+                    }
+                })
+            );
+
+            const status = this.smartConnectionsService.getStatus();
+            if (status.smartConnections) {
+                console.log('[Doc Doctor] Smart Connections available with', status.embeddingsCount, 'embeddings');
+            } else {
+                console.log('[Doc Doctor] Smart Connections not available, using keyword fallback');
+            }
+        } catch (error) {
+            console.error('[Doc Doctor] Failed to initialize Smart Connections:', error);
         }
     }
 

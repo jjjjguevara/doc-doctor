@@ -118,7 +118,7 @@ export interface AnchorSettings {
     /** Prefix for stub anchors (default: "stub") */
     prefix: string;
     /** ID generation style */
-    idStyle: 'random' | 'sequential' | 'type-prefixed';
+    idStyle: 'random' | 'sequential' | 'type-prefixed' | 'type-only';
     /** Length of random IDs */
     randomIdLength: number;
 }
@@ -224,7 +224,7 @@ export interface ParsedStub {
     /** Level 2 properties (if structured syntax) */
     properties: Record<string, unknown>;
     /** Parsing syntax used */
-    syntax: 'compact' | 'structured';
+    syntax: 'compact' | 'structured' | 'explicit';
     /** Line number in frontmatter where stub starts */
     frontmatterLine: number;
     /** Any parsing warnings for this stub */
@@ -370,9 +370,10 @@ export type StubsSettingsActions =
     | { type: 'STUBS_ADD_TYPE'; payload: { key: string; displayName: string; color: string; icon?: string } }
     | { type: 'STUBS_UPDATE_TYPE'; payload: { id: string; updates: Partial<StubTypeDefinition> } }
     | { type: 'STUBS_DELETE_TYPE'; payload: { id: string } }
-    | { type: 'STUBS_REORDER_TYPES'; payload: { orderedIds: string[] } }
+    | { type: 'STUBS_REORDER_TYPES'; payload: { orderedIds?: string[]; sourceId?: string; targetId?: string } }
     // Structured property management (Level 2)
     | { type: 'STUBS_ADD_PROPERTY'; payload: { key: string; displayName: string; type: StructuredPropertyDefinition['type'] } }
+    | { type: 'STUBS_REORDER_PROPERTIES'; payload: { orderedIds?: string[]; sourceId?: string; targetId?: string } }
     | { type: 'STUBS_UPDATE_PROPERTY'; payload: { id: string; updates: Partial<StructuredPropertyDefinition> } }
     | { type: 'STUBS_TOGGLE_PROPERTY_INCLUDE'; payload: { id: string } }
     | { type: 'STUBS_DELETE_PROPERTY'; payload: { id: string } }

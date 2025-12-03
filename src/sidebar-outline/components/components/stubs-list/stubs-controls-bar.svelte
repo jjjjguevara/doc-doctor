@@ -12,9 +12,12 @@
         stubSortOrder,
         cycleSortOrder,
         stubsConfig,
+        linkStatusFilter,
+        setLinkStatusFilter,
+        type LinkStatusFilter,
     } from '../../../../stubs/stubs-store';
     import { getSortedStubTypes } from '../../../../stubs/stubs-defaults';
-    import { Search, Settings, RefreshCw, X, Filter, ArrowDown, ArrowUp, Layers } from 'lucide-svelte';
+    import { Search, Settings, RefreshCw, X, Filter, ArrowDown, ArrowUp, Layers, ChevronsDown, ChevronsUp, Link, Unlink } from 'lucide-svelte';
     import LabeledAnnotations from '../../../../main';
 
     export let plugin: LabeledAnnotations;
@@ -23,9 +26,18 @@
 
     $: config = $stubsConfig;
     $: stubTypes = config ? getSortedStubTypes(config) : [];
-    $: hasActiveFilters = $activeTypeFilters.size > 0;
-    $: activeFilterCount = $activeTypeFilters.size;
+    $: hasActiveFilters = $activeTypeFilters.size > 0 || $linkStatusFilter !== 'all';
+    $: activeFilterCount = $activeTypeFilters.size + ($linkStatusFilter !== 'all' ? 1 : 0);
     $: showSearch = $controls.showStubsSearch;
+
+    // Sort order display info
+    $: sortInfo = {
+        'type': { label: 'Grouped by type' },
+        'asc': { label: 'First → Last (flat list)' },
+        'desc': { label: 'Last → First (flat list)' },
+        'type-asc': { label: 'Grouped: First → Last' },
+        'type-desc': { label: 'Grouped: Last → First' },
+    }[$stubSortOrder] || { label: 'Sort' };
 
     const toggleSettings = () => {
         controls.dispatch({ type: 'TOGGLE_STUBS_SETTINGS' });
@@ -49,6 +61,11 @@
 
     const handleClearFilters = () => {
         clearTypeFilters();
+        setLinkStatusFilter('all');
+    };
+
+    const handleLinkStatusChange = (status: LinkStatusFilter) => {
+        setLinkStatusFilter(status);
     };
 
     const syncStubs = () => {
@@ -110,12 +127,37 @@
                     on:click={handleClearFilters}
                 >
                     <span class="dropdown-check"></span>
-                    <span>Clear filters</span>
+                    <span class="dropdown-label">Clear filters</span>
                     {#if hasActiveFilters}
                         <X size={12} />
                     {/if}
                 </button>
                 <div class="dropdown-divider"></div>
+
+                <!-- Link status filters -->
+                <div class="dropdown-section-label">Link Status</div>
+                <button
+                    class="dropdown-item"
+                    class:selected={$linkStatusFilter === 'linked'}
+                    on:click={() => handleLinkStatusChange($linkStatusFilter === 'linked' ? 'all' : 'linked')}
+                >
+                    <span class="dropdown-check">{$linkStatusFilter === 'linked' ? '✓' : ''}</span>
+                    <Link size={12} />
+                    <span class="dropdown-label">Linked</span>
+                </button>
+                <button
+                    class="dropdown-item"
+                    class:selected={$linkStatusFilter === 'unlinked'}
+                    on:click={() => handleLinkStatusChange($linkStatusFilter === 'unlinked' ? 'all' : 'unlinked')}
+                >
+                    <span class="dropdown-check">{$linkStatusFilter === 'unlinked' ? '✓' : ''}</span>
+                    <Unlink size={12} />
+                    <span class="dropdown-label">Unlinked</span>
+                </button>
+                <div class="dropdown-divider"></div>
+
+                <!-- Type filters -->
+                <div class="dropdown-section-label">Stub Types</div>
                 {#each stubTypes as typeDef}
                     <button
                         class="dropdown-item"
@@ -124,7 +166,7 @@
                     >
                         <span class="dropdown-check">{$activeTypeFilters.has(typeDef.key) ? '✓' : ''}</span>
                         <span class="type-indicator" style="background-color: {typeDef.color}"></span>
-                        <span>{typeDef.displayName}</span>
+                        <span class="dropdown-label">{typeDef.displayName}</span>
                     </button>
                 {/each}
             </div>
@@ -136,14 +178,20 @@
         class="control-btn"
         class:active={$stubSortOrder !== 'type'}
         on:click={handleSort}
-        title="Sort: {$stubSortOrder === 'type' ? 'By type' : $stubSortOrder === 'asc' ? 'First to last' : 'Last to first'}"
+        title="Sort: {sortInfo.label}"
     >
         {#if $stubSortOrder === 'type'}
             <Layers size={14} />
         {:else if $stubSortOrder === 'asc'}
             <ArrowDown size={14} />
-        {:else}
+        {:else if $stubSortOrder === 'desc'}
             <ArrowUp size={14} />
+        {:else if $stubSortOrder === 'type-asc'}
+            <ChevronsDown size={14} />
+        {:else if $stubSortOrder === 'type-desc'}
+            <ChevronsUp size={14} />
+        {:else}
+            <Layers size={14} />
         {/if}
     </button>
 
@@ -242,15 +290,15 @@
     .type-dropdown {
         position: absolute;
         top: 100%;
-        left: 0;
+        right: 0;
         z-index: 100;
-        min-width: 150px;
+        min-width: 160px;
         margin-top: 4px;
         background: var(--background-primary);
         border: 1px solid var(--background-modifier-border);
         border-radius: 6px;
         box-shadow: var(--shadow-s);
-        overflow: hidden;
+        overflow: visible;
     }
 
     .dropdown-item {
@@ -288,6 +336,20 @@
         cursor: default;
     }
 
+    .dropdown-label {
+        flex: 1;
+        text-align: left;
+    }
+
+    .dropdown-section-label {
+        padding: 4px 10px 2px;
+        font-size: 10px;
+        color: var(--text-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+    }
+
     .dropdown-divider {
         height: 1px;
         background: var(--background-modifier-border);
@@ -298,6 +360,7 @@
         width: 14px;
         text-align: center;
         color: var(--interactive-accent);
+        flex-shrink: 0;
     }
 
     .type-indicator {

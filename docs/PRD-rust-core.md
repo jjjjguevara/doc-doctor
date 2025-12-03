@@ -2,7 +2,7 @@
 
 **Version**: 0.1.0
 **Date**: 2024-12-02
-**Author**: Claude (with Josué Guevara)
+**Author**: Josué Guevara
 **Status**: Draft
 
 ---

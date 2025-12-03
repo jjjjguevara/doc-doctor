@@ -585,7 +585,7 @@ interface OllamaConfig extends LLMConfiguration {
 
 ### 5.1 Strong Default System Prompt
 
-The system prompt provides comprehensive context about M-Stubs and J-Editorial principles. This strong default works even when stub types don't have custom `semanticPurpose` definitions—the prompt itself explains the philosophy and common gap patterns.
+The system prompt provides comprehensive context about Doc Doctor and J-Editorial principles. This strong default works even when stub types don't have custom `semanticPurpose` definitions—the prompt itself explains the philosophy and common gap patterns.
 
 **Design Principle**: Schema definitions override defaults. If a stub type has `semanticPurpose`, `indicators`, and `antiPatterns` defined, those are used. Otherwise, the system prompt provides general guidance that the LLM applies to all stub types.
 

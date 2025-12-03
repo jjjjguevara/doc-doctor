@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/doc-doctor-domain",
+    "crates/doc-doctor-parser-yaml",
+    "crates/doc-doctor-config-yaml",
+    "crates/doc-doctor-application",
+    "crates/doc-doctor-wasm",
     "crates/doc-doctor-core",
     "crates/doc-doctor-ffi",
     "crates/doc-doctor-mcp",
@@ -44,3 +49,16 @@ wasm-bindgen = "0.2"
 
 # Testing
 pretty_assertions = "1.4"
+
+# Path handling
+dirs = "5.0"
+
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"
+
+# Console output styling
+indicatif = "0.17"
+console = "0.15"
+tabled = "0.17"
+unicode-width = "0.2"

@@ -2,6 +2,9 @@ import { AnnotationType } from '../sidebar-outline/components/components/annotat
 import { ClipboardTemplates } from '../clipboard/helpers/annotations-to-text';
 import { StubsConfiguration } from '../stubs/stubs-types';
 import { LLMConfiguration } from '../llm/llm-types';
+import { MCPSettings } from '../mcp/mcp-types';
+import { PromptSettings } from '../llm/prompt-schema';
+import type { SmartConnectionsSettings } from '../smart-connections/types';
 
 export type Case = 'upper' | 'lower' | 'title';
 export type Opacity = 80 | 60 | 40 | 20;
@@ -55,9 +58,21 @@ export type DateString = string;
 
 export type DefaultPalette = 'bright' | 'dull';
 
-export type SidebarViewMode = 'annotations' | 'stubs' | 'ai';
+export type SidebarViewMode = 'annotations' | 'stubs' | 'ai' | 'explore';
+
+/**
+ * Master feature toggles for enabling/disabling entire plugin features
+ */
+export type FeatureToggles = {
+    annotations: boolean;
+    stubs: boolean;
+    ai: boolean;
+    explore: boolean;
+};
 
 export type Settings = {
+    /** Master feature toggles */
+    features: FeatureToggles;
     editorSuggest: {
         enableAutoSuggest: boolean;
         triggerPhrase: string;
@@ -101,4 +116,7 @@ export type Settings = {
     };
     stubs: StubsConfiguration;
     llm: LLMConfiguration;
+    mcp: MCPSettings;
+    prompts: PromptSettings;
+    smartConnections: SmartConnectionsSettings;
 };

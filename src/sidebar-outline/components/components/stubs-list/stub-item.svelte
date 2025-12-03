@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { Menu } from 'obsidian';
     import type { ParsedStub, StubTypeDefinition } from '../../../../stubs/stubs-types';
     import { Link, Unlink, X, Undo2 } from 'lucide-svelte';
     import { createEventDispatcher, onDestroy, onMount } from 'svelte';
@@ -11,6 +12,11 @@
 
     const dispatch = createEventDispatcher<{
         delete: { stubId: string; anchor: string | null; confirmed: boolean };
+        goto: { stubId: string; anchor: string | null };
+        copy: { stubId: string; description: string };
+        select: { stubId: string; anchor: string | null };
+        unlink: { stubId: string; anchor: string | null };
+        remediate: { stubId: string; stub: ParsedStub };
     }>();
 
     let isPendingDelete = false;
@@ -88,6 +94,78 @@
             clearTimeout(confirmTimeout);
         }
     });
+
+    function handleContextMenu(e: MouseEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const menu = new Menu();
+
+        // Go to anchor (if linked)
+        if (isLinked && stub.anchor) {
+            menu.addItem((item) => {
+                item.setTitle('Go to anchor')
+                    .setIcon('arrow-right')
+                    .onClick(() => {
+                        dispatch('goto', { stubId: stub.id, anchor: stub.anchor });
+                    });
+            });
+        }
+
+        // Select in editor
+        menu.addItem((item) => {
+            item.setTitle('Select in editor')
+                .setIcon('text-cursor')
+                .onClick(() => {
+                    dispatch('select', { stubId: stub.id, anchor: stub.anchor });
+                });
+        });
+
+        menu.addSeparator();
+
+        // Copy description
+        menu.addItem((item) => {
+            item.setTitle('Copy description')
+                .setIcon('copy')
+                .onClick(() => {
+                    dispatch('copy', { stubId: stub.id, description: stub.description });
+                });
+        });
+
+        // Remediate stub
+        menu.addItem((item) => {
+            item.setTitle('Remediate stub')
+                .setIcon('wand-2')
+                .onClick(() => {
+                    dispatch('remediate', { stubId: stub.id, stub });
+                });
+        });
+
+        menu.addSeparator();
+
+        // Unlink anchor (if linked)
+        if (isLinked && stub.anchor) {
+            menu.addItem((item) => {
+                item.setTitle('Unlink anchor')
+                    .setIcon('unlink')
+                    .onClick(() => {
+                        dispatch('unlink', { stubId: stub.id, anchor: stub.anchor });
+                    });
+            });
+        }
+
+        // Delete stub
+        menu.addItem((item) => {
+            item.setTitle('Delete stub')
+                .setIcon('trash-2')
+                .setWarning(true)
+                .onClick(() => {
+                    dispatch('delete', { stubId: stub.id, anchor: stub.anchor, confirmed: true });
+                });
+        });
+
+        menu.showAtMouseEvent(e);
+    }
 </script>
 
 <div
@@ -103,6 +181,7 @@
         class:unlinked={!isLinked}
         class:pending-delete={isPendingDelete}
         on:click={onClick}
+        on:contextmenu={handleContextMenu}
         style="--type-color: {typeDef.color}"
     >
         {#if showTypeIndicator}
@@ -115,7 +194,7 @@
                 <Unlink size={12} />
             {/if}
         </span>
-        <span class="stub-description" title={stub.description}>
+        <span class="stub-description" title={stub.anchor ? `${stub.description}\n\nAnchor: ^${stub.anchor}` : stub.description}>
             {stub.description}
         </span>
     </button>

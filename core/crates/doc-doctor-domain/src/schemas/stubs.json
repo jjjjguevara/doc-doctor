@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://doc-doctor.dev/schemas/stubs.json",
+  "title": "J-Editorial Stubs Schema",
+  "description": "Schema for stubs array in document frontmatter",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["type", "description"],
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "Stub type identifier"
+      },
+      "description": {
+        "type": "string",
+        "description": "Description of what's needed"
+      },
+      "stub_form": {
+        "type": "string",
+        "enum": ["transient", "persistent", "blocking", "structural"],
+        "default": "transient",
+        "description": "Severity/lifecycle classification"
+      },
+      "priority": {
+        "type": "string",
+        "enum": ["low", "medium", "high", "critical"],
+        "default": "low",
+        "description": "Priority level"
+      },
+      "origin": {
+        "type": "string",
+        "enum": ["author_identified", "peer_surfaced", "qa_detected", "user_reported", "system_generated", "external_cited"],
+        "default": "author_identified",
+        "description": "Who identified this stub"
+      },
+      "anchor": {
+        "type": "string",
+        "pattern": "^\\^[a-zA-Z0-9-]+$",
+        "description": "Block anchor ID (e.g., ^stub-abc123)"
+      },
+      "inline_anchors": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Inline anchor references"
+      },
+      "assignees": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Assigned individuals/teams"
+      },
+      "participants": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Participants in discussion"
+      },
+      "references": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Related references (wikilinks, URLs)"
+      },
+      "dependencies": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Dependencies (other stubs or documents)"
+      },
+      "urgency": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Urgency factor (0.0-1.0)"
+      },
+      "impact": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Impact factor (0.0-1.0)"
+      },
+      "complexity": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Complexity factor (0.0-1.0)"
+      }
+    }
+  }
+}

@@ -18,6 +18,9 @@ import { DAYS_UNUSED } from './settings-selectors';
 import { ClipboardTemplateSection } from '../clipboard/helpers/annotations-to-text';
 import { StubsSettingsActions, stubsSettingsReducer } from '../stubs/stubs-settings-reducer';
 import { LLMSettingsActions, llmSettingsReducer } from '../llm/llm-settings-reducer';
+import { MCPSettingsActions, mcpSettingsReducer } from '../mcp/mcp-settings-reducer';
+import { PromptsSettingsActions, promptsSettingsReducer } from '../llm/prompts-settings-reducer';
+import { SmartConnectionsSettingsActions, smartConnectionsSettingsReducer } from '../smart-connections/settings-reducer';
 
 export type SettingsActions =
     | {
@@ -140,8 +143,16 @@ export type SettingsActions =
       }
     | { type: 'SET_DEFAULT_PALETTE'; payload: { palette: DefaultPalette } }
     | { type: 'SET_SIDEBAR_VIEW_MODE'; payload: { mode: SidebarViewMode } }
+    // Feature toggles
+    | { type: 'SET_FEATURE_ANNOTATIONS'; payload: { enabled: boolean } }
+    | { type: 'SET_FEATURE_STUBS'; payload: { enabled: boolean } }
+    | { type: 'SET_FEATURE_AI'; payload: { enabled: boolean } }
+    | { type: 'SET_FEATURE_EXPLORE'; payload: { enabled: boolean } }
     | StubsSettingsActions
-    | LLMSettingsActions;
+    | LLMSettingsActions
+    | MCPSettingsActions
+    | PromptsSettingsActions
+    | SmartConnectionsSettingsActions;
 
 const updateState = (store: Settings, action: SettingsActions) => {
     const labels = store.decoration.styles.labels;
@@ -247,12 +258,29 @@ const updateState = (store: Settings, action: SettingsActions) => {
         store.decoration.defaultPalette = action.payload.palette;
     } else if (action.type === 'SET_SIDEBAR_VIEW_MODE') {
         store.outline.sidebarViewMode = action.payload.mode;
+    } else if (action.type === 'SET_FEATURE_ANNOTATIONS') {
+        store.features.annotations = action.payload.enabled;
+    } else if (action.type === 'SET_FEATURE_STUBS') {
+        store.features.stubs = action.payload.enabled;
+    } else if (action.type === 'SET_FEATURE_AI') {
+        store.features.ai = action.payload.enabled;
+    } else if (action.type === 'SET_FEATURE_EXPLORE') {
+        store.features.explore = action.payload.enabled;
     } else if (action.type.startsWith('STUBS_')) {
         // Delegate stubs actions to stubs reducer
         stubsSettingsReducer(store.stubs, action as StubsSettingsActions);
     } else if (action.type.startsWith('LLM_')) {
         // Delegate LLM actions to LLM reducer
         llmSettingsReducer(store.llm, action as LLMSettingsActions);
+    } else if (action.type.startsWith('MCP_')) {
+        // Delegate MCP actions to MCP reducer
+        mcpSettingsReducer(store.mcp, action as MCPSettingsActions);
+    } else if (action.type.startsWith('PROMPTS_')) {
+        // Delegate prompts actions to prompts reducer
+        promptsSettingsReducer(store.prompts, action as PromptsSettingsActions);
+    } else if (action.type.startsWith('SET_SMART_CONNECTIONS_')) {
+        // Delegate Smart Connections actions to smart connections reducer
+        smartConnectionsSettingsReducer(store.smartConnections, action as SmartConnectionsSettingsActions);
     }
 };
 export const settingsReducer = (

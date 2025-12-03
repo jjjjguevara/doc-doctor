@@ -1,155 +1,104 @@
 //! Doc Doctor CLI
 //!
 //! Command-line tool for J-Editorial document analysis.
+//!
+//! # Usage
+//!
+//! ```bash
+//! ddoc parse document.md
+//! ddoc validate "docs/**/*.md" --strict
+//! ddoc dimensions document.md
+//! ddoc batch "vault/**/*.md" --dimensions
+//! ddoc health --refinement 0.75
+//! ddoc usefulness --refinement 0.8 --audience internal
+//! ddoc config --show
+//! ddoc config --init
+//! ```
 
-use clap::{Parser, Subcommand};
+mod commands;
+mod config;
+mod output;
+pub mod tui;
+
 use anyhow::Result;
+use clap::{Parser, Subcommand};
+
+use commands::{
+    batch::BatchCommand, config::ConfigCommand, dashboard::DashboardCommand,
+    dimensions::DimensionsCommand, health::HealthCommand, parse::ParseCommand,
+    schema::SchemaCommand, stubs::StubsCommand, test::TestCommand,
+    usefulness::UsefulnessCommand, validate::ValidateCommand,
+};
+use output::OutputFormat;
 
 #[derive(Parser)]
-#[command(name = "doc-doctor")]
+#[command(name = "dd")]
 #[command(about = "J-Editorial document analysis and quality management")]
 #[command(version)]
+#[command(author)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
 
     /// Output format
-    #[arg(short, long, default_value = "human")]
+    #[arg(short, long, global = true, default_value = "human")]
     format: OutputFormat,
 
     /// Verbose output
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     verbose: bool,
 }
 
 #[derive(Subcommand)]
 enum Commands {
     /// Parse and display document L1 properties
-    Parse {
-        /// Path to markdown file
-        path: String,
-    },
+    Parse(ParseCommand),
 
     /// Validate frontmatter against J-Editorial schema
-    Validate {
-        /// File pattern (glob)
-        pattern: String,
-
-        /// Strict mode - reject unknown fields
-        #[arg(short, long)]
-        strict: bool,
-    },
+    Validate(ValidateCommand),
 
     /// List stubs from documents
-    Stubs {
-        /// Path to markdown file
-        path: String,
-
-        /// Filter by stub type
-        #[arg(long)]
-        type_filter: Option<String>,
-
-        /// Filter by stub form
-        #[arg(long)]
-        form_filter: Option<String>,
-    },
+    Stubs(StubsCommand),
 
     /// Calculate L2 dimensions
-    Dimensions {
-        /// Path to markdown file
-        path: String,
-    },
+    Dimensions(DimensionsCommand),
 
     /// Calculate health score
-    Health {
-        /// Refinement score (0.0-1.0)
-        #[arg(long)]
-        refinement: f64,
-
-        /// Stubs as JSON array
-        #[arg(long)]
-        stubs: Option<String>,
-    },
+    Health(HealthCommand),
 
     /// Calculate usefulness margin
-    Usefulness {
-        /// Refinement score (0.0-1.0)
-        #[arg(long)]
-        refinement: f64,
-
-        /// Target audience
-        #[arg(long)]
-        audience: String,
-    },
+    Usefulness(UsefulnessCommand),
 
     /// Batch process multiple documents
-    Batch {
-        /// File pattern (glob)
-        pattern: String,
-
-        /// Include L2 dimensions
-        #[arg(long)]
-        dimensions: bool,
-
-        /// Number of parallel jobs
-        #[arg(short, long, default_value = "4")]
-        jobs: usize,
-    },
-
-    /// Check stub-anchor sync status
-    Sync {
-        /// Path to markdown file
-        path: String,
-    },
+    Batch(BatchCommand),
 
     /// Export JSON schema definitions
-    Schema {
-        /// Schema type (frontmatter, stubs)
-        schema_type: String,
-    },
-}
+    Schema(SchemaCommand),
 
-#[derive(Clone, Copy, Default, clap::ValueEnum)]
-enum OutputFormat {
-    #[default]
-    Human,
-    Json,
-    Yaml,
+    /// Show or initialize configuration
+    Config(ConfigCommand),
+
+    /// Interactive vault health dashboard
+    Dashboard(DashboardCommand),
+
+    /// Interactive test runner for document operations
+    Test(TestCommand),
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Parse { path } => {
-            println!("Parsing: {}", path);
-            let content = std::fs::read_to_string(&path)?;
-            let props = doc_doctor_core::parse_document(&content)?;
-            println!("{:#?}", props);
-        }
-
-        Commands::Health { refinement, stubs } => {
-            let stub_vec: Vec<doc_doctor_core::Stub> = if let Some(json) = stubs {
-                serde_json::from_str(&json)?
-            } else {
-                Vec::new()
-            };
-            let health = doc_doctor_core::dimensions::calculate_health(refinement, &stub_vec);
-            println!("Health: {:.4}", health);
-        }
-
-        Commands::Usefulness { refinement, audience } => {
-            let aud: doc_doctor_core::Audience = audience.parse()?;
-            let result = doc_doctor_core::dimensions::calculate_usefulness(refinement, aud);
-            println!("Margin: {:.4}", result.margin);
-            println!("Is useful: {}", result.is_useful);
-            println!("Gate: {:.2}", result.gate);
-        }
-
-        _ => {
-            println!("Command not yet implemented - Phase 3");
-        }
+        Commands::Parse(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Validate(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Stubs(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Dimensions(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Health(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Usefulness(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Batch(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Schema(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Config(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Dashboard(cmd) => cmd.run(cli.format, cli.verbose),
+        Commands::Test(cmd) => cmd.run(cli.format, cli.verbose),
     }
-
-    Ok(())
 }

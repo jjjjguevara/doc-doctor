@@ -125,6 +125,60 @@ function parseStubEntry(
     const entryObj = entry as Record<string, unknown>;
     const keys = Object.keys(entryObj);
 
+    // Check for EXPLICIT format first: { type: "link", description: "..." }
+    // This is the alternative format where 'type' is an explicit key
+    if ('type' in entryObj && typeof entryObj.type === 'string' && 'description' in entryObj) {
+        const explicitType = entryObj.type as string;
+        const description = entryObj.description;
+
+        if (typeof description !== 'string') {
+            return {
+                error: {
+                    type: 'invalid_value',
+                    index,
+                    message: `Entry at index ${index} has non-string description`,
+                },
+            };
+        }
+
+        const anchor = extractAnchor(entryObj);
+        const typeConfig = getStubTypeByKey(config, explicitType);
+
+        if (!typeConfig) {
+            warnings.push({
+                type: 'unknown_type',
+                index,
+                stubType: explicitType,
+                message: `Unknown stub type "${explicitType}" at index ${index}`,
+            });
+        }
+
+        // Extract all other properties (exclude type, description, anchor)
+        const props: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(entryObj)) {
+            if (key !== 'type' && key !== 'description' && key !== 'anchor') {
+                props[key] = value;
+            }
+        }
+
+        const validatedProps = validateProperties(props, config.structuredProperties, warnings, index);
+
+        return {
+            stub: {
+                id: generateStubId(explicitType, description, index),
+                type: explicitType,
+                description: description,
+                anchor,
+                anchorResolved: false,
+                properties: { ...(typeConfig?.defaults ?? {}), ...validatedProps },
+                syntax: 'explicit', // New syntax type for explicit format
+                frontmatterLine: -1,
+                warnings: warnings.map((w) => w.message),
+            },
+            warnings,
+        };
+    }
+
     // Find the stub type key (should be one of the configured types, or 'anchor')
     const typeKey = findStubTypeKey(keys, config);
 

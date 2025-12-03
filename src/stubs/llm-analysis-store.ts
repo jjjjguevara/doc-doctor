@@ -8,6 +8,7 @@ import { writable, derived, get } from 'svelte/store';
 import { Notice } from 'obsidian';
 import type LabeledAnnotations from '../main';
 import type { SuggestedStub, FoundReference, LLMError, ExternalContext } from '../llm/llm-types';
+import type { ParsedStub } from './stubs-types';
 import { syncState } from './stubs-store';
 import { buildDocumentContext } from '../llm/llm-prompts';
 import { getLLMService } from '../llm/llm-service';
@@ -53,6 +54,12 @@ export interface LLMAnalysisState {
 
     /** Whether streaming text is expanded */
     streamingExpanded: boolean;
+
+    /** Stub being remediated (from stubs panel) */
+    remediateStub: ParsedStub | null;
+
+    /** Whether in remediate mode */
+    remediateMode: boolean;
 }
 
 // =============================================================================
@@ -72,6 +79,8 @@ const initialState: LLMAnalysisState = {
     lastAnalysisTime: null,
     activeTab: 'suggestions',
     streamingExpanded: false,
+    remediateStub: null,
+    remediateMode: false,
 };
 
 // =============================================================================
@@ -207,6 +216,66 @@ export function setActiveTab(tab: 'suggestions' | 'references'): void {
     }));
 }
 
+/**
+ * Clear remediate mode
+ */
+export function clearRemediateMode(): void {
+    llmAnalysisState.update((state) => ({
+        ...state,
+        remediateStub: null,
+        remediateMode: false,
+    }));
+}
+
+/**
+ * Set remediate stub (for triggering remediation from stubs panel)
+ */
+export function setRemediateStub(stub: ParsedStub | null): void {
+    llmAnalysisState.update((state) => ({
+        ...state,
+        remediateStub: stub,
+        remediateMode: stub !== null,
+    }));
+}
+
+// =============================================================================
+// REMEDIATE MODE HELPERS
+// =============================================================================
+
+/**
+ * Build remediation context for the LLM prompt
+ */
+function buildRemediateContext(stub: ParsedStub): string {
+    const lines: string[] = [
+        '### REMEDIATION MODE',
+        '',
+        'You are being asked to help resolve a specific stub in this document.',
+        '',
+        '**Focus Stub:**',
+        `- Type: \`${stub.type}\``,
+        `- Description: "${stub.description}"`,
+    ];
+
+    if (stub.anchor) {
+        lines.push(`- Anchor: \`${stub.anchor}\``);
+    }
+
+    if (stub.properties && Object.keys(stub.properties).length > 0) {
+        lines.push(`- Properties: ${JSON.stringify(stub.properties)}`);
+    }
+
+    lines.push('');
+    lines.push('**Your Task:**');
+    lines.push('1. Analyze the document to understand the context around this stub');
+    lines.push('2. Suggest specific content, citations, or references that would resolve this stub');
+    lines.push('3. If possible, provide the actual content needed to fill this gap');
+    lines.push('4. Suggest any additional related stubs that should be addressed');
+    lines.push('');
+    lines.push('Focus your analysis on resolving this specific stub, but also note any closely related gaps.');
+
+    return lines.join('\n');
+}
+
 // =============================================================================
 // MAIN TRIGGER FUNCTION
 // =============================================================================
@@ -277,6 +346,15 @@ export async function triggerLLMAnalysis(plugin: LabeledAnnotations): Promise<vo
         return;
     }
 
+    // Check for remediate mode
+    const currentState = get(llmAnalysisState);
+    const isRemediateMode = currentState.remediateMode;
+    const remediateStub = currentState.remediateStub;
+
+    if (isRemediateMode && remediateStub) {
+        console.log('[Doc Doctor] Remediate mode analysis for stub:', remediateStub);
+    }
+
     // Log tool availability (debug)
     const settings = plugin.settings.getValue();
     if (settings.llm.debug.enabled) {
@@ -328,7 +406,13 @@ export async function triggerLLMAnalysis(plugin: LabeledAnnotations): Promise<vo
         }
 
         // Format external context for inclusion in prompt
-        const externalContextText = externalContext ? formatExternalContext(externalContext) : '';
+        let externalContextText = externalContext ? formatExternalContext(externalContext) : '';
+
+        // Add remediation context if in remediate mode
+        if (isRemediateMode && remediateStub) {
+            const remediateContext = buildRemediateContext(remediateStub);
+            externalContextText = remediateContext + (externalContextText ? '\n\n' + externalContextText : '');
+        }
 
         // Build document context
         const context = buildDocumentContext(
@@ -336,7 +420,7 @@ export async function triggerLLMAnalysis(plugin: LabeledAnnotations): Promise<vo
             content,
             frontmatter,
             existingStubs,
-            externalContextText, // Pass external context
+            externalContextText, // Pass external context (including remediate context)
         );
 
         // Get LLM service
@@ -369,7 +453,17 @@ export async function triggerLLMAnalysis(plugin: LabeledAnnotations): Promise<vo
         const parts: string[] = [];
         if (stubCount > 0) parts.push(`${stubCount} stub${stubCount !== 1 ? 's' : ''}`);
         if (refCount > 0) parts.push(`${refCount} reference${refCount !== 1 ? 's' : ''}`);
-        new Notice(`Analysis complete: ${parts.join(', ') || 'no suggestions'}`);
+
+        if (isRemediateMode) {
+            new Notice(`Remediation analysis complete: ${parts.join(', ') || 'no suggestions'}`);
+        } else {
+            new Notice(`Analysis complete: ${parts.join(', ') || 'no suggestions'}`);
+        }
+
+        // Clear remediate mode after successful analysis
+        if (isRemediateMode) {
+            clearRemediateMode();
+        }
 
     } catch (error) {
         const llmError = error as LLMError;
@@ -379,5 +473,10 @@ export async function triggerLLMAnalysis(plugin: LabeledAnnotations): Promise<vo
         new Notice(`Analysis failed: ${llmError.message}`, 5000);
 
         console.error('[Doc Doctor] LLM analysis error:', llmError);
+
+        // Clear remediate mode on error too
+        if (isRemediateMode) {
+            clearRemediateMode();
+        }
     }
 }

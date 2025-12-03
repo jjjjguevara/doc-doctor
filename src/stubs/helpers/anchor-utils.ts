@@ -175,6 +175,16 @@ export function generateAnchorId(
             }
             break;
 
+        case 'type-only':
+            // Type-only: ^link-a1b2 (no prefix, just type)
+            if (stubType) {
+                baseId = `^${stubType}-${randomAlphanumeric(randomIdLength)}`;
+            } else {
+                // Fall back to prefix style if no type provided
+                baseId = `^${prefix}-${randomAlphanumeric(randomIdLength)}`;
+            }
+            break;
+
         case 'sequential':
             // For sequential, we need existing anchors to find next number
             baseId = `^${prefix}-${getNextSequentialId(existingAnchors, prefix)}`;

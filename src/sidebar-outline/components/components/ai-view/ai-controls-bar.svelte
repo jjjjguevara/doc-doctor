@@ -244,9 +244,11 @@
     .template-dropdown {
         position: absolute;
         top: 100%;
-        left: 0;
+        right: 0;
         z-index: 100;
-        min-width: 200px;
+        min-width: 180px;
+        max-width: calc(100vw - 32px);
+        width: max-content;
         margin-top: 4px;
         background: var(--background-primary);
         border: 1px solid var(--background-modifier-border);
@@ -285,5 +287,7 @@
     .template-option-desc {
         font-size: var(--font-ui-smaller);
         color: var(--text-muted);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 </style>

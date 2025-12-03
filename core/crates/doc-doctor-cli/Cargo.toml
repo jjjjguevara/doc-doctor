@@ -4,17 +4,47 @@ description = "CLI for Doc Doctor - J-Editorial document analysis"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+authors.workspace = true
+repository.workspace = true
 
 [[bin]]
-name = "doc-doctor"
+name = "ddoc"
 path = "src/main.rs"
 
 [dependencies]
-doc-doctor-core = { path = "../doc-doctor-core" }
-serde.workspace = true
-serde_json.workspace = true
-serde_yaml.workspace = true
-clap.workspace = true
-glob.workspace = true
-rayon.workspace = true
-anyhow.workspace = true
+# Hexagonal Architecture layers
+doc-doctor-domain = { path = "../doc-doctor-domain" }
+doc-doctor-application = { path = "../doc-doctor-application" }
+doc-doctor-parser-yaml = { path = "../doc-doctor-parser-yaml" }
+doc-doctor-config-yaml = { path = "../doc-doctor-config-yaml" }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# CLI
+clap = { workspace = true }
+
+# File patterns
+glob = { workspace = true }
+
+# Parallel processing
+rayon = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# DateTime
+chrono = { workspace = true }
+
+# TUI
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+
+# Console output styling
+indicatif = { workspace = true }
+console = { workspace = true }
+tabled = { workspace = true }
+unicode-width = { workspace = true }

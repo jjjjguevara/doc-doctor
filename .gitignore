@@ -18,6 +18,10 @@ main.js
 # obsidian
 data.json
 
+# Development files
+CLAUDE.md
+AGENTS.md
+
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 temp

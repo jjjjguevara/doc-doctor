@@ -1,6 +1,6 @@
 # Doc Doctor
 
-A vector-based stubs system for [Obsidian](https://obsidian.md) that enables tracking document gaps, quality control, and editorial workflows. Built on the [J-Editorial Framework](https://jjjjguevara.vercel.app/j-editorial) principles.
+An AI-powered document quality system for [Obsidian](https://obsidian.md) that enables tracking document gaps, semantic exploration, and editorial workflows. Built on the [J-Editorial Framework](https://jjjjguevara.vercel.app/j-editorial) principles.
 
 > **Fork Notice**: Doc Doctor is a fork of [Enhanced Annotations](https://github.com/ycnmhd/obsidian-enhanced-annotations) by [ycnmhd](https://github.com/ycnmhd). The original plugin provides excellent comment/highlight management features which remain fully functional in this fork. Doc Doctor extends these capabilities with a comprehensive stubs system for document quality tracking.
 
@@ -26,7 +26,42 @@ Doc Doctor supports configurable stub types out of the box:
 
 ## Features
 
-### Stubs System (New in v0.2.0)
+### AI Integration (New in v0.4.0)
+
+Doc Doctor integrates with LLMs to provide intelligent document analysis and stub resolution assistance.
+
+#### LLM-Powered Features
+- **Stub Suggestions**: Get AI-generated recommendations for resolving stubs
+- **Document Analysis**: Analyze document structure and identify quality gaps
+- **Custom Prompts**: Configure custom prompt templates for specific workflows
+- **Multi-Provider Support**: Choose between Anthropic (Claude) or OpenAI (GPT)
+
+#### MCP Server Integration
+- Connect Claude Code via Model Context Protocol for batch operations
+- Document parsing, validation, and analysis tools
+- Stub manipulation and resolution workflows
+
+#### Web Search (Firecrawl)
+- Optional Firecrawl integration for external context
+- Search and scrape web content to inform stub resolution
+- Enrich documents with cited sources
+
+### Explore View (New in v0.4.0)
+
+Semantic search and related notes discovery powered by [Smart Connections](https://github.com/brianpetro/obsidian-smart-connections).
+
+#### Smart Connections Integration
+- **Embedding-Based Search**: Find semantically related notes using AI embeddings
+- **Related Notes Panel**: View and navigate to related content in the sidebar
+- **Configurable Threshold**: Adjust similarity threshold for result filtering
+- **Fallback Search**: Keyword-based search when Smart Connections unavailable
+
+#### Related Property Management
+- Customize the frontmatter property name for related notes (default: `related`)
+- Auto-populate suggestions from semantic search results
+- Navigate directly to related documents
+
+### Stubs System (v0.2.0+)
 
 #### Quick Stub Insertion
 - Type `^^` to insert a **compact stub** with default description
@@ -242,6 +277,25 @@ magnitude = √(PE² + friction²)
 
 ## Changelog
 
+### v0.4.1 (2024-12-03)
+- **New**: General settings tab with master feature toggles (Annotations, Stubs, AI, Explore)
+- **New**: Unified diagnostics panel for all integrations (LLM, MCP, Smart Connections)
+- **New**: Configurable related property name in Explore settings
+- **Improved**: Smart Connections loading reliability (auto-refresh when embeddings ready)
+- **Improved**: Settings organization with cross-cutting concerns in General tab
+
+### v0.4.0 (2024-12-03)
+- **New**: AI Integration with LLM-powered document analysis
+- **New**: Multi-provider support (Anthropic Claude, OpenAI GPT)
+- **New**: MCP server for Claude Code integration
+- **New**: Custom prompt templates for stub resolution
+- **New**: Firecrawl integration for web search and scraping
+- **New**: Explore view with Smart Connections integration
+- **New**: Semantic search using AI embeddings
+- **New**: Related notes discovery with configurable similarity threshold
+- **New**: Fallback keyword search when Smart Connections unavailable
+- **New**: Debug mode with dry-run and verbose logging options
+
 ### v0.3.0 (2024-12-02)
 - **Fixed**: Stub deletion now works correctly (two-click confirmation)
 - **Fixed**: Frontmatter preservation during stub operations (no more reformatting)
@@ -295,6 +349,6 @@ For major changes, please open an issue first to discuss the proposed changes.
 
 ---
 
-**Version**: 0.3.0
+**Version**: 0.4.1
 **Obsidian**: 0.15.0+
 **License**: MIT

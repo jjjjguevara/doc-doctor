@@ -90,12 +90,54 @@ function updateStubsState(config: StubsConfiguration, action: StubsSettingsActio
         }
 
         case 'STUBS_REORDER_TYPES': {
-            const { orderedIds } = action.payload;
-            orderedIds.forEach((id, index) => {
-                if (config.stubTypes[id]) {
-                    config.stubTypes[id].sortOrder = index + 1;
+            const { orderedIds, sourceId, targetId } = action.payload;
+
+            if (orderedIds) {
+                // Full reorder with ordered array
+                orderedIds.forEach((id, index) => {
+                    if (config.stubTypes[id]) {
+                        config.stubTypes[id].sortOrder = index + 1;
+                    }
+                });
+            } else if (sourceId && targetId) {
+                // Drag-drop reorder: move source before target
+                const types = Object.values(config.stubTypes).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                const sourceIndex = types.findIndex((t) => t.id === sourceId);
+                const targetIndex = types.findIndex((t) => t.id === targetId);
+
+                if (sourceIndex !== -1 && targetIndex !== -1) {
+                    const [moved] = types.splice(sourceIndex, 1);
+                    types.splice(targetIndex, 0, moved);
+                    types.forEach((t, index) => {
+                        config.stubTypes[t.id].sortOrder = index + 1;
+                    });
                 }
-            });
+            }
+            break;
+        }
+
+        case 'STUBS_REORDER_PROPERTIES': {
+            const { orderedIds, sourceId, targetId } = action.payload;
+
+            if (orderedIds) {
+                orderedIds.forEach((id, index) => {
+                    if (config.structuredProperties[id]) {
+                        config.structuredProperties[id].sortOrder = index + 1;
+                    }
+                });
+            } else if (sourceId && targetId) {
+                const props = Object.values(config.structuredProperties).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                const sourceIndex = props.findIndex((p) => p.id === sourceId);
+                const targetIndex = props.findIndex((p) => p.id === targetId);
+
+                if (sourceIndex !== -1 && targetIndex !== -1) {
+                    const [moved] = props.splice(sourceIndex, 1);
+                    props.splice(targetIndex, 0, moved);
+                    props.forEach((p, index) => {
+                        config.structuredProperties[p.id].sortOrder = index + 1;
+                    });
+                }
+            }
             break;
         }
 

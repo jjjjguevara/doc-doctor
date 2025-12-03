@@ -23,6 +23,8 @@
 	import AIControlsBar from './components/ai-view/ai-controls-bar.svelte';
 	import AIView from './components/ai-view/ai-view.svelte';
 	import StubsSearch from './components/stubs-list/stubs-search.svelte';
+	import ExplorePanel from '../../explore-view/components/explore-panel.svelte';
+	import ExploreControlsBar from './components/explore-view/explore-controls-bar.svelte';
 
 	export let plugin: LabeledAnnotations;
 </script>
@@ -40,6 +42,8 @@
                 <StubsControlsBar {plugin} />
             {:else if $controls.viewMode === 'ai'}
                 <AIControlsBar {plugin} />
+            {:else if $controls.viewMode === 'explore'}
+                <ExploreControlsBar {plugin} />
             {/if}
         </div>
 
@@ -96,6 +100,10 @@
             <div class="ai-content">
                 <AIView {plugin} />
             </div>
+        {:else if $controls.viewMode === 'explore'}
+            <div class="explore-content">
+                <ExplorePanel {plugin} />
+            </div>
         {/if}
     {/if}
 </div>
@@ -142,6 +150,16 @@
     }
 
     .ai-content {
+        width: 100%;
+        padding: 0 8px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .explore-content {
         width: 100%;
         padding: 0 8px;
         box-sizing: border-box;

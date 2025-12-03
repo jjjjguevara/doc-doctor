@@ -58,9 +58,21 @@ export const stubFocusLocation = writable<'inline' | 'frontmatter'>('inline');
 export const activeTypeFilters = writable<Set<string>>(new Set());
 
 /**
- * Sort order for stubs: 'asc' (first to last in document), 'desc' (last to first), or 'type' (grouped by type)
+ * Sort order for stubs:
+ * - 'type': grouped by type (default)
+ * - 'asc': first to last in document (flat list)
+ * - 'desc': last to first in document (flat list)
+ * - 'type-asc': grouped by type, sorted asc within type
+ * - 'type-desc': grouped by type, sorted desc within type
  */
-export const stubSortOrder = writable<'asc' | 'desc' | 'type'>('type');
+export type StubSortOrder = 'type' | 'asc' | 'desc' | 'type-asc' | 'type-desc';
+export const stubSortOrder = writable<StubSortOrder>('type');
+
+/**
+ * Link status filter: 'all', 'linked', 'unlinked'
+ */
+export type LinkStatusFilter = 'all' | 'linked' | 'unlinked';
+export const linkStatusFilter = writable<LinkStatusFilter>('all');
 
 /**
  * Loading and error state
@@ -114,16 +126,23 @@ export const stubsByType = derived(
 );
 
 /**
- * Filtered stubs by search text and type filter
+ * Filtered stubs by search text, type filter, and link status
  */
 export const filteredStubs = derived(
-    [syncState, filterText, activeTypeFilters],
-    ([$sync, $filter, $typeFilters]) => {
+    [syncState, filterText, activeTypeFilters, linkStatusFilter],
+    ([$sync, $filter, $typeFilters, $linkStatus]) => {
         let stubs = $sync.stubs;
 
         // Apply type filter (empty set = show all)
         if ($typeFilters.size > 0) {
             stubs = stubs.filter((stub) => $typeFilters.has(stub.type));
+        }
+
+        // Apply link status filter
+        if ($linkStatus === 'linked') {
+            stubs = stubs.filter((stub) => stub.anchorResolved);
+        } else if ($linkStatus === 'unlinked') {
+            stubs = stubs.filter((stub) => !stub.anchorResolved);
         }
 
         // Apply text search
@@ -154,11 +173,30 @@ export const visibleStubs = derived(
 
 /**
  * Helper to get stub position in document (for sorting)
+ * - Linked stubs: uses anchor position in document
+ * - Unlinked stubs: uses frontmatter line as fallback (placed after linked stubs)
+ *
+ * The UNLINKED_OFFSET ensures unlinked stubs sort after all linked stubs
+ * while preserving their relative frontmatter order.
  */
-function getStubPosition(stub: ParsedStub, anchors: InlineAnchor[]): number {
-    if (!stub.anchor) return Infinity;
-    const anchor = anchors.find((a) => a.id === stub.anchor);
-    return anchor ? anchor.position.offset : Infinity;
+const UNLINKED_OFFSET = 1_000_000_000; // Large offset to place unlinked after linked
+
+function getStubPosition(stub: ParsedStub, anchors: InlineAnchor[], stubIndex: number): number {
+    // For linked stubs, try to find anchor position
+    if (stub.anchor) {
+        // Try exact match first
+        let anchor = anchors.find((a) => a.id === stub.anchor);
+        // Also try with ^ prefix if not found
+        if (!anchor && !stub.anchor.startsWith('^')) {
+            anchor = anchors.find((a) => a.id === `^${stub.anchor}` || a.id === stub.anchor);
+        }
+        if (anchor && anchor.position) {
+            return anchor.position.offset;
+        }
+    }
+    // For unlinked stubs, use stub index as fallback
+    // Add UNLINKED_OFFSET so they sort after all linked stubs
+    return UNLINKED_OFFSET + stubIndex;
 }
 
 /**
@@ -167,15 +205,21 @@ function getStubPosition(stub: ParsedStub, anchors: InlineAnchor[]): number {
 export const sortedVisibleStubs = derived(
     [visibleStubs, syncState, stubSortOrder],
     ([$stubs, $sync, $sortOrder]) => {
-        if ($sortOrder === 'type') {
-            // For type grouping, return unsorted (will be grouped later)
+        // For type-grouped views, return unsorted (will be grouped later)
+        if ($sortOrder === 'type' || $sortOrder === 'type-asc' || $sortOrder === 'type-desc') {
             return $stubs;
         }
 
+        // Create index map for original positions
+        const indexMap = new Map<string, number>();
+        $stubs.forEach((stub, idx) => indexMap.set(stub.id, idx));
+
         // Sort by position in document
         const sorted = [...$stubs].sort((a, b) => {
-            const posA = getStubPosition(a, $sync.anchors);
-            const posB = getStubPosition(b, $sync.anchors);
+            const idxA = indexMap.get(a.id) ?? 0;
+            const idxB = indexMap.get(b.id) ?? 0;
+            const posA = getStubPosition(a, $sync.anchors, idxA);
+            const posB = getStubPosition(b, $sync.anchors, idxB);
             return $sortOrder === 'asc' ? posA - posB : posB - posA;
         });
 
@@ -193,6 +237,10 @@ export const visibleStubsByType = derived(
 
         if (!$config) return grouped;
 
+        // Create index map for original positions
+        const indexMap = new Map<string, number>();
+        $stubs.forEach((stub, idx) => indexMap.set(stub.id, idx));
+
         // Initialize with all configured types
         const sortedTypes = getSortedStubTypes($config);
         for (const type of sortedTypes) {
@@ -209,13 +257,16 @@ export const visibleStubsByType = derived(
             }
         }
 
-        // Sort stubs within each group by position if not in type mode
-        if ($sortOrder !== 'type') {
-            for (const [type, stubs] of grouped) {
+        // Sort stubs within each group by position for type-asc/type-desc
+        if ($sortOrder === 'type-asc' || $sortOrder === 'type-desc') {
+            const isAsc = $sortOrder === 'type-asc';
+            for (const [, stubs] of grouped) {
                 stubs.sort((a, b) => {
-                    const posA = getStubPosition(a, $sync.anchors);
-                    const posB = getStubPosition(b, $sync.anchors);
-                    return $sortOrder === 'asc' ? posA - posB : posB - posA;
+                    const idxA = indexMap.get(a.id) ?? 0;
+                    const idxB = indexMap.get(b.id) ?? 0;
+                    const posA = getStubPosition(a, $sync.anchors, idxA);
+                    const posB = getStubPosition(b, $sync.anchors, idxB);
+                    return isAsc ? posA - posB : posB - posA;
                 });
             }
         }
@@ -399,12 +450,12 @@ export function setTypeFilters(typeKeys: string[]): void {
 /**
  * Set sort order
  */
-export function setSortOrder(order: 'asc' | 'desc' | 'type'): void {
+export function setSortOrder(order: StubSortOrder): void {
     stubSortOrder.set(order);
 }
 
 /**
- * Cycle through sort orders: type -> asc -> desc -> type
+ * Cycle through sort orders: type -> asc -> desc -> type-asc -> type-desc -> type
  */
 export function cycleSortOrder(): void {
     stubSortOrder.update((current) => {
@@ -414,11 +465,22 @@ export function cycleSortOrder(): void {
             case 'asc':
                 return 'desc';
             case 'desc':
+                return 'type-asc';
+            case 'type-asc':
+                return 'type-desc';
+            case 'type-desc':
                 return 'type';
             default:
                 return 'type';
         }
     });
+}
+
+/**
+ * Set link status filter
+ */
+export function setLinkStatusFilter(status: LinkStatusFilter): void {
+    linkStatusFilter.set(status);
 }
 
 /**

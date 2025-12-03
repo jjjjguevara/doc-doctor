@@ -1,0 +1,37 @@
+[package]
+name = "doc-doctor-wasm"
+description = "WASM bindings for Doc Doctor - Hexagonal Architecture"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Domain layer
+doc-doctor-domain = { path = "../doc-doctor-domain" }
+
+# Application layer
+doc-doctor-application = { path = "../doc-doctor-application" }
+
+# Parser adapter
+doc-doctor-parser-yaml = { path = "../doc-doctor-parser-yaml" }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# WASM bindings
+wasm-bindgen = { workspace = true }
+
+# Better panic messages in WASM
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[features]
+default = ["console_error_panic_hook"]

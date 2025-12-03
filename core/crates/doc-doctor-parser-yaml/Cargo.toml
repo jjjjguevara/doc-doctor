@@ -1,0 +1,22 @@
+[package]
+name = "doc-doctor-parser-yaml"
+description = "YAML frontmatter parser for doc-doctor - implements DocumentParser trait"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+doc-doctor-domain = { path = "../doc-doctor-domain" }
+
+# Serialization
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }

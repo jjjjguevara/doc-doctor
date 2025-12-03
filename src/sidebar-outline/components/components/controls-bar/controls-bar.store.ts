@@ -9,7 +9,7 @@ export const isReading = writable<boolean>(false);
 
 export const pluginIdle = writable(false);
 
-export type ViewMode = 'annotations' | 'stubs' | 'ai';
+export type ViewMode = 'annotations' | 'stubs' | 'ai' | 'explore';
 
 type Controls = {
     showSearchInput: boolean;
@@ -20,6 +20,8 @@ type Controls = {
     viewMode: ViewMode;
     showStubsSettings: boolean;
     showStubsSearch: boolean;
+    showExploreSearch: boolean;
+    showExploreSettings: boolean;
 };
 
 type ControlsAction =
@@ -30,7 +32,9 @@ type ControlsAction =
     | { type: 'TOGGLE_LABELS_FILTERS' }
     | { type: 'SET_VIEW_MODE'; payload: ViewMode }
     | { type: 'TOGGLE_STUBS_SETTINGS' }
-    | { type: 'TOGGLE_STUBS_SEARCH' };
+    | { type: 'TOGGLE_STUBS_SEARCH' }
+    | { type: 'TOGGLE_EXPLORE_SEARCH' }
+    | { type: 'TOGGLE_EXPLORE_SETTINGS' };
 
 const updateState = (store: Controls, action: ControlsAction) => {
     if (action.type === 'TOGGLE_SEARCH_INPUT') {
@@ -65,6 +69,8 @@ const updateState = (store: Controls, action: ControlsAction) => {
         store.showStylesSettings = false;
         store.showStubsSettings = false;
         store.showStubsSearch = false;
+        store.showExploreSearch = false;
+        store.showExploreSettings = false;
     } else if (action.type === 'TOGGLE_STUBS_SETTINGS') {
         store.showStubsSettings = !store.showStubsSettings;
         if (store.showStubsSettings) {
@@ -75,6 +81,18 @@ const updateState = (store: Controls, action: ControlsAction) => {
     } else if (action.type === 'TOGGLE_STUBS_SEARCH') {
         store.showStubsSearch = !store.showStubsSearch;
         if (store.showStubsSearch) {
+            store.showStubsSettings = false;
+        }
+    } else if (action.type === 'TOGGLE_EXPLORE_SEARCH') {
+        store.showExploreSearch = !store.showExploreSearch;
+        if (store.showExploreSearch) {
+            store.showExploreSettings = false;
+        }
+    } else if (action.type === 'TOGGLE_EXPLORE_SETTINGS') {
+        store.showExploreSettings = !store.showExploreSettings;
+        if (store.showExploreSettings) {
+            store.showExploreSearch = false;
+            store.showStylesSettings = false;
             store.showStubsSettings = false;
         }
     }
@@ -94,6 +112,8 @@ export const controls = new Store<Controls, ControlsAction>(
         viewMode: 'annotations',
         showStubsSettings: false,
         showStubsSearch: false,
+        showExploreSearch: false,
+        showExploreSettings: false,
     },
     reducer,
 );
